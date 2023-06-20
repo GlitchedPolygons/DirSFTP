@@ -1,0 +1,89 @@
+﻿@page "/browse"
+
+<PageTitle>
+    DirSFTP - @currentDirectory
+</PageTitle>
+
+@using Renci.SshNet.Sftp
+@using GlitchedPolygons.DirSFTP.Models
+@using GlitchedPolygons.DirSFTP.Services
+@using GlitchedPolygons.DirSFTP.ExtensionMethods
+
+<h1>SFTP Browser</h1>
+<h2>Connected to TODO as TODO</h2> @* TODO! *@
+
+<br />
+
+@if (files == null)
+{
+    <br />
+    <p style="margin: 32px;">
+        <em>
+            Loading...
+        </em>
+    </p>
+}
+else
+{
+    <table class="table">
+        <thead>
+        <tr>
+            <th>
+                Name
+            </th>
+            <th>
+                Last accessed
+            </th>
+            <th>
+                Last modified
+            </th>
+            <th>
+                Permissions
+            </th>
+            <th>
+                UID
+            </th>
+            <th>
+                GID
+            </th>
+        </tr>
+        </thead>
+        <tbody>
+        @foreach (SftpFile file in files)
+        {
+            <tr>
+                <td title="@file.FullName">
+                    @file.Name
+                </td>
+                <td title="@file.LastAccessTimeUtc.ToString("yyyy-MM-dd HH:mm:ss") (UTC)">
+                    @file.LastAccessTime.ToString("yyyy-MM-dd HH:mm:ss")
+                </td>
+                <td title="@file.LastWriteTimeUtc.ToString("yyyy-MM-dd HH:mm:ss") (UTC)">
+                    @file.LastWriteTime.ToString("yyyy-MM-dd HH:mm:ss")
+                </td>
+                <td title="@file.ToHumanReadablePermissionMatrix()">
+                    @file.ToOctalNotation()
+                </td>
+                <td>
+                    @file.UserId
+                </td>
+                <td>
+                    @file.GroupId
+                </td>
+            </tr>
+        }
+        </tbody>
+    </table>
+}
+
+@code {
+
+    private string currentDirectory = ".";
+    private SftpFile[]? files = null;
+
+    protected override async Task OnInitializedAsync()
+    {
+     
+    }
+
+}
