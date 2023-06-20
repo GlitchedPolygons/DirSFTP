@@ -16,6 +16,8 @@
     along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 
+using GlitchedPolygons.ExtensionMethods;
+
 namespace GlitchedPolygons.DirSFTP.Models;
 
 public record SftpConfig
@@ -26,4 +28,6 @@ public record SftpConfig
     public string Password { get; init; } = string.Empty;
     public string PrivateKey { get; init; } = null;
     public string PrivateKeyPassphrase { get; init; } = null;
+
+    public string Id => $"{Username}@{Host}:{Port}".SHA256();
 }

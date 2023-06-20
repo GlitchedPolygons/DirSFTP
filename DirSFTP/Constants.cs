@@ -20,5 +20,8 @@ namespace GlitchedPolygons.DirSFTP;
 
 public static class Constants
 {
-    
+    public static class PreferenceIds
+    {
+        public const string SAVED_SFTP_CONNECTIONS = "SftpConnections";
+    }
 }
