@@ -1,26 +1,82 @@
-﻿<?xml version="1.0" encoding="UTF-8" ?>
-<Application xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
-             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
-             xmlns:local="clr-namespace:GlitchedPolygons.DirSFTP"
-             x:Class="GlitchedPolygons.DirSFTP.App">
+﻿<?xml
+    version="1.0"
+    encoding="UTF-8"?>
+
+<!--
+
+/*
+    DirSFTP
+    Copyright (C) 2023  Raphael Beck
+
+    This program is free software: you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
+
+    This program is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with this program.  If not, see <https://www.gnu.org/licenses/>.
+*/
+
+-->
+
+<Application
+    xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+    xmlns:local="clr-namespace:GlitchedPolygons.DirSFTP"
+    x:Class="GlitchedPolygons.DirSFTP.App">
     <Application.Resources>
         <ResourceDictionary>
 
-            <Color x:Key="PageBackgroundColor">#512bdf</Color>
-            <Color x:Key="PrimaryTextColor">White</Color>
+            <Color
+                x:Key="PageBackgroundColor">
+                #512bdf
+            </Color>
 
-            <Style TargetType="Label">
-                <Setter Property="TextColor" Value="{DynamicResource PrimaryTextColor}" />
-                <Setter Property="FontFamily" Value="OpenSansRegular" />
+            <Color
+                x:Key="PrimaryTextColor">
+                White
+            </Color>
+
+            <Style
+                TargetType="Label">
+
+                <Setter
+                    Property="TextColor"
+                    Value="{DynamicResource PrimaryTextColor}" />
+
+                <Setter
+                    Property="FontFamily"
+                    Value="OpenSansRegular" />
             </Style>
 
-            <Style TargetType="Button">
-                <Setter Property="TextColor" Value="{DynamicResource PrimaryTextColor}" />
-                <Setter Property="FontFamily" Value="OpenSansRegular" />
-                <Setter Property="BackgroundColor" Value="#2b0b98" />
-                <Setter Property="Padding" Value="14,10" />
+            <Style
+                TargetType="Button">
+
+                <Setter
+                    Property="TextColor"
+                    Value="{DynamicResource PrimaryTextColor}" />
+
+                <Setter
+                    Property="FontFamily"
+                    Value="OpenSansRegular" />
+
+                <Setter
+                    Property="BackgroundColor"
+                    Value="#2b0b98" />
+
+                <Setter
+                    Property="Padding"
+                    Value="14,10" />
+
             </Style>
 
         </ResourceDictionary>
+
     </Application.Resources>
+
 </Application>

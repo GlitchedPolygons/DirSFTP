@@ -16,18 +16,9 @@
     along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 
-using Android.App;
-using Android.Runtime;
-
 namespace GlitchedPolygons.DirSFTP;
 
-[Application]
-public class MainApplication : MauiApplication
+public static class Constants
 {
-    public MainApplication(IntPtr handle, JniHandleOwnership ownership)
-        : base(handle, ownership)
-    {
-    }
-
-    protected override MauiApp CreateMauiApp() => MauiProgram.CreateMauiApp();
+    
 }
