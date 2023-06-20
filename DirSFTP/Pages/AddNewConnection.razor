@@ -44,7 +44,34 @@
 
 <br />
 
-@* TODO: Implement form here *@
+
+<label>Host</label>
+<input type="text"
+       placeholder="sftp.example.com"
+       @bind="host" />
+
+<label>Port</label>
+<input type="number"
+       placeholder="22"
+       @bind="port" />
+
+<label>Username</label>
+<input type="text"
+       placeholder="gordon"
+       @bind="username" />
+
+<label>Password</label>
+<input type="password"
+       @bind="password" />
+
+<label>Private key</label>
+<textarea @bind="privateKey" rows="3"></textarea>
+
+<label>Private key passphrase</label>
+<input type="password" @bind="privateKeyPassphrase" />
+
+<label>Default remote directory</label>
+<Entry />
 
 <button @onclick="OnClickCancel">
     Cancel
@@ -54,8 +81,16 @@
     Save
 </button>
 
-@code 
+@code
 {
+    private string host;
+    private int port;
+    private string username;
+    private string password;
+    private string privateKey;
+    private string privateKeyPassphrase;
+    private string remoteDirectory;
+
     protected override async Task OnInitializedAsync()
     {
     }
@@ -67,8 +102,8 @@
 
     private void OnClickSave()
     {
-        // TODO: save conn details to SecureStorage here
-        
+    // TODO: save conn details to SecureStorage here
+
         NavigationManager.NavigateTo("/");
     }
 }
