@@ -19,55 +19,56 @@
 @inject IConfigStorage ConfigStorage
 @inject NavigationManager NavigationManager
 
-@page "/"
+@page "/add-new-connection"
 
 @using GlitchedPolygons.DirSFTP.Services.Config
 @using GlitchedPolygons.DirSFTP.Models
 
-<PageTitle>DirSFTP</PageTitle>
+<PageTitle>DirSFTP - Add new connection</PageTitle>
 
 <h1>
-    Home
+    Add new SFTP connection
 </h1>
 
 <br />
 
 <h2>
-    Welcome to DirSFTP!
+    Save a new set of SFTP connection details by compiling the form below.
 </h2>
 
 <br />
 
-@if (sftpConfigs is not null)
-{
-    @foreach (SftpConfig sftpConfig in sftpConfigs)
-    {
-        <button >
-            @sftpConfig.Username@@@sftpConfig.Host
-        </button>
-    }
-}
+<p>
+    Make sure to double-check all the fields against typos!
+</p>
 
-<button @onclick="OnClickAddNewConnection">
-    Add new connection
+<br />
+
+@* TODO: Implement form here *@
+
+<button @onclick="OnClickCancel">
+    Cancel
+</button>
+
+<button @onclick="OnClickSave">
+    Save
 </button>
 
 @code 
 {
-    private IEnumerable<SftpConfig> sftpConfigs = null;
-
     protected override async Task OnInitializedAsync()
     {
-        sftpConfigs = await ConfigStorage.GetAll();
     }
 
-    private async Task OnClickConnect(SftpConfig config)
+    private void OnClickCancel()
     {
+        NavigationManager.NavigateTo("/");
+    }
+
+    private void OnClickSave()
+    {
+        // TODO: save conn details to SecureStorage here
         
-    }
-
-    private void OnClickAddNewConnection()
-    {
-        NavigationManager.NavigateTo("/add-new-connection");
+        NavigationManager.NavigateTo("/");
     }
 }

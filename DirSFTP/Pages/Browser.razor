@@ -18,6 +18,10 @@
 
 @page "/browse"
 
+@inject NavigationManager NavigationManager
+
+@inject IConfigStorage ConfigStorage
+
 <PageTitle>
     DirSFTP - @currentDirectory
 </PageTitle>
@@ -26,15 +30,26 @@
 @using GlitchedPolygons.DirSFTP.Models
 @using GlitchedPolygons.DirSFTP.Services
 @using GlitchedPolygons.DirSFTP.ExtensionMethods
+@using GlitchedPolygons.DirSFTP.Services.Config
+@using GlitchedPolygons.DirSFTP.Services.SFTP
+@using GlitchedPolygons.ExtensionMethods
+@using Renci.SshNet
 
 <h1>SFTP Browser</h1>
-<h2>Connected to TODO as TODO</h2> @* TODO! *@
+
+<br />
+
+@if (currentSftpConfig is not null)
+{
+    <h2>Connected to @currentSftpConfig.Host as @currentSftpConfig.Username</h2>
+}
 
 <br />
 
 @if (files == null)
 {
     <br />
+
     <p style="margin: 32px;">
         <em>
             Loading...
@@ -44,62 +59,189 @@
 else
 {
     <table class="table">
+
         <thead>
+
         <tr>
+
             <th>
                 Name
             </th>
+
             <th title="Format: yyyy-MM-dd HH:mm:ss">
                 Last accessed
             </th>
+
             <th title="Format: yyyy-MM-dd HH:mm:ss">
                 Last modified
             </th>
+
             <th>
                 Permissions
             </th>
+
             <th>
                 UID
             </th>
+
             <th>
                 GID
             </th>
+
         </tr>
+
         </thead>
+
         <tbody>
+
         @foreach (SftpFile file in files)
         {
-            <tr>
+            <tr @onclick="() => OnClickFile(file)">
+
                 <td title="@file.FullName">
                     @file.Name
                 </td>
+
                 <td title="@file.LastAccessTimeUtc.ToString("yyyy-MM-dd HH:mm:ss") (UTC)">
                     @file.LastAccessTime.ToString("yyyy-MM-dd HH:mm:ss")
                 </td>
+
                 <td title="@file.LastWriteTimeUtc.ToString("yyyy-MM-dd HH:mm:ss") (UTC)">
                     @file.LastWriteTime.ToString("yyyy-MM-dd HH:mm:ss")
                 </td>
+
                 <td title="@file.ToHumanReadablePermissionMatrix()">
                     @file.ToOctalNotation()
                 </td>
+
                 <td>
                     @file.UserId
                 </td>
+
                 <td>
                     @file.GroupId
                 </td>
+
             </tr>
         }
+
         </tbody>
+
     </table>
 }
 
 @code
 {
     private string currentDirectory = ".";
-    private IEnumerable<SftpFile>? files = null;
+    private SftpConfig currentSftpConfig = null;
+    private ISftpService sftpService = null;
+    private IEnumerable<SftpFile> files = null;
 
     protected override async Task OnInitializedAsync()
     {
+        string lastSftpConfigId = await SecureStorage.GetAsync(Constants.PreferenceIds.LAST_SFTP_CONFIG_ID);
+
+        currentDirectory = await SecureStorage.GetAsync(Constants.PreferenceIds.LAST_DIRECTORY);
+
+        currentSftpConfig = await ConfigStorage.Get(lastSftpConfigId);
+
+        if (currentSftpConfig is null)
+        {
+            NavigationManager.NavigateTo("/");
+            return;
+        }
+
+        if (currentDirectory.NullOrEmpty())
+        {
+            currentDirectory = currentSftpConfig.DefaultRemoteDirectory;
+        }
+
+        sftpService = new SftpService(currentSftpConfig);
+
+        await OpenDirectory(currentDirectory);
+    }
+
+    private async Task OnClickFile(SftpFile file)
+    {
+        if (file is null)
+        {
+            return;
+        }
+
+        if (file.IsDirectory)
+        {
+            string directory = file.Name;
+
+            if (directory == "..")
+            {
+                if (directory.Contains('\\'))
+                {
+                    await OpenDirectory(directory[..directory.LastIndexOf('\\')]);
+                }
+                else
+                {
+                    await OpenDirectory(directory[..directory.LastIndexOf('/')].Replace("\\", "/"));
+                }
+
+                return;
+            }
+
+            await OpenDirectory(Path.Combine(currentDirectory, directory));
+        }
+        else if (file.IsRegularFile)
+        {
+                // TODO
+        }
+        else
+        {
+                // TODO
+        }
+    }
+
+    private async Task OpenDirectory(string remoteDirectory)
+    {
+        if (sftpService is null || currentSftpConfig is null)
+        {
+            return;
+        }
+
+        if (!sftpService.StillConnected)
+        {
+            if (Application.Current?.MainPage is not null)
+            {
+                await Application.Current.MainPage.DisplayAlert("Connection lost", $"Connection lost to {currentSftpConfig.Username}@{currentSftpConfig.Host}", "OK");
+            }
+
+            NavigationManager.NavigateTo("/");
+            return;
+        }
+
+        if (!sftpService.DirectoryExists(remoteDirectory))
+        {
+            if (Application.Current?.MainPage is not null)
+            {
+                if (await Application.Current.MainPage.DisplayAlert("Directory access failed", $"The directory \"{remoteDirectory}\" couldn't be accessed. How do you want to proceed?", "Return to default directory", "Cancel (stay in current directory)"))
+                {
+                    if (sftpService.DirectoryExists(currentSftpConfig.DefaultRemoteDirectory))
+                    {
+                        await OpenDirectory(currentSftpConfig.DefaultRemoteDirectory);
+                        return;
+                    }
+
+                    if (sftpService.DirectoryExists("."))
+                    {
+                        await OpenDirectory(".");
+                        return;
+                    }
+                }
+                else return;
+            }
+        }
+
+        currentDirectory = remoteDirectory;
+
+        files = sftpService.ListAllFiles(currentDirectory);
+
+        await SecureStorage.SetAsync(Constants.PreferenceIds.LAST_DIRECTORY, currentDirectory);
     }
 }

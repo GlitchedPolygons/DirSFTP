@@ -16,6 +16,8 @@
     along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 
+using GlitchedPolygons.DirSFTP.Services.Config;
+
 namespace GlitchedPolygons.DirSFTP;
 
 public static class MauiProgram
@@ -29,6 +31,8 @@ public static class MauiProgram
             .ConfigureFonts(fonts => { fonts.AddFont("OpenSans-Regular.ttf", "OpenSansRegular"); });
 
         builder.Services.AddMauiBlazorWebView();
+
+        builder.Services.AddTransient<IConfigStorage, ConfigStorage>();
 
 #if DEBUG
         builder.Services.AddBlazorWebViewDeveloperTools();

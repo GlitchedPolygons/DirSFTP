@@ -66,6 +66,49 @@ public class SftpService : ISftpService
         );
     }
 
+    public bool StillConnected
+    {
+        get
+        {
+            using SftpClient client = Create();
+
+            try
+            {
+                client.Connect();
+                return client.IsConnected;
+            }
+            catch (Exception exception)
+            {
+                logger?.LogError(exception, "{Class}::{Method}: Connection to host failed", nameof(SftpService), nameof(StillConnected));
+                return false;
+            }
+            finally
+            {
+                client.Disconnect();
+            }
+        }
+    }
+
+    public bool DirectoryExists(string remoteDirectory)
+    {
+        using SftpClient client = Create();
+
+        try
+        {
+            client.Connect();
+            return client.Exists(remoteDirectory);
+        }
+        catch (Exception exception)
+        {
+            logger?.LogError(exception, "{Class}::{Method}: Directory existence check failed for [{RemoteDirectory}]", nameof(SftpService), nameof(DirectoryExists), remoteDirectory);
+            return false;
+        }
+        finally
+        {
+            client.Disconnect();
+        }
+    }
+
     public IEnumerable<SftpFile> ListAllFiles(string remoteDirectory = ".")
     {
         using SftpClient client = Create();
@@ -77,7 +120,7 @@ public class SftpService : ISftpService
         }
         catch (Exception exception)
         {
-            logger?.LogError(exception, "Failed in listing files under [{RemoteDirectory}]", remoteDirectory);
+            logger?.LogError(exception, "{Class}::{Method}: Failed listing files inside [{RemoteDirectory}]", nameof(SftpService), nameof(ListAllFiles), remoteDirectory);
             return Array.Empty<SftpFile>();
         }
         finally
@@ -95,11 +138,11 @@ public class SftpService : ISftpService
             client.Connect();
             using FileStream fileStream = File.OpenRead(localFilePath);
             client.UploadFile(fileStream, remoteFilePath);
-            logger?.LogInformation("Finished uploading the file [{LocalFilePath}] to [{RemoteFilePath}]", localFilePath, remoteFilePath);
+            logger?.LogInformation("{Class}::{Method}: Finished uploading the file [{LocalFilePath}] to [{RemoteFilePath}]", nameof(SftpService), nameof(UploadFile), localFilePath, remoteFilePath);
         }
         catch (Exception exception)
         {
-            logger?.LogError(exception, "Failed in uploading the file [{LocalFilePath}] to [{RemoteFilePath}]", localFilePath, remoteFilePath);
+            logger?.LogError(exception, "{Class}::{Method}: Failed uploading the file [{LocalFilePath}] to [{RemoteFilePath}]", nameof(SftpService), nameof(UploadFile), localFilePath, remoteFilePath);
         }
         finally
         {
@@ -116,11 +159,11 @@ public class SftpService : ISftpService
             client.Connect();
             using FileStream fileStream = File.Create(localFilePath);
             client.DownloadFile(remoteFilePath, fileStream);
-            logger?.LogInformation("Finished downloading the file [{LocalFilePath}] from [{RemoteFilePath}]", localFilePath, remoteFilePath);
+            logger?.LogInformation("{Class}::{Method}: Finished downloading the file [{LocalFilePath}] from [{RemoteFilePath}]", nameof(SftpService), nameof(DownloadFile), localFilePath, remoteFilePath);
         }
         catch (Exception exception)
         {
-            logger?.LogError(exception, "Failed in downloading the file [{LocalFilePath}] from [{RemoteFilePath}]", localFilePath, remoteFilePath);
+            logger?.LogError(exception, "{Class}::{Method}: Failed downloading the file [{LocalFilePath}] from [{RemoteFilePath}]", nameof(SftpService), nameof(DownloadFile), localFilePath, remoteFilePath);
         }
         finally
         {
@@ -136,11 +179,11 @@ public class SftpService : ISftpService
         {
             client.Connect();
             client.DeleteFile(remoteFilePath);
-            logger?.LogInformation("File [{RemoteFilePath}] is deleted", remoteFilePath);
+            logger?.LogInformation("{Class}::{Method}: File [{RemoteFilePath}] has been deleted", nameof(SftpService), nameof(DeleteFile), remoteFilePath);
         }
         catch (Exception exception)
         {
-            logger?.LogError(exception, "Failed deleting the file [{RemoteFilePath}]", remoteFilePath);
+            logger?.LogError(exception, "{Class}::{Method}: Failed deleting the file [{RemoteFilePath}]", nameof(SftpService), nameof(DeleteFile), remoteFilePath);
         }
         finally
         {

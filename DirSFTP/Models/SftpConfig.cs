@@ -28,6 +28,7 @@ public record SftpConfig
     public string Password { get; init; } = string.Empty;
     public string PrivateKey { get; init; } = null;
     public string PrivateKeyPassphrase { get; init; } = null;
+    public string DefaultRemoteDirectory { get; init; } = ".";
 
     public string Id => $"{Username}@{Host}:{Port}".SHA256();
 }
