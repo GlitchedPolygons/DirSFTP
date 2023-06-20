@@ -1,16 +1,17 @@
 ﻿using GlitchedPolygons.DirSFTP.Models;
 using GlitchedPolygons.ExtensionMethods;
+using Microsoft.Extensions.Logging;
 using Renci.SshNet;
 using Renci.SshNet.Sftp;
 
-namespace GlitchedPolygons.DirSFTP.Services;
+namespace GlitchedPolygons.DirSFTP.Services.SFTP;
 
 public class SftpService : ISftpService
 {
     private readonly SftpConfig config;
-    private readonly ILogger? logger;
+    private readonly ILogger logger;
 
-    public SftpService(SftpConfig sftpConfig, ILogger? logger = null)
+    public SftpService(SftpConfig sftpConfig, ILogger logger = null)
     {
         config = sftpConfig;
         this.logger = logger;
@@ -26,7 +27,7 @@ public class SftpService : ISftpService
         if (config.PrivateKey.NotNullNotEmpty())
         {
             using Stream privateKeyStream = new MemoryStream(config.PrivateKey.UTF8GetBytes());
-            
+
             return new SftpClient
             (
                 config.Host,
@@ -58,7 +59,7 @@ public class SftpService : ISftpService
         }
         catch (Exception exception)
         {
-            logger?.LogError(exception, "Failed in listing files under [{remoteDirectory}]", remoteDirectory);
+            logger?.LogError(exception, "Failed in listing files under [{RemoteDirectory}]", remoteDirectory);
             return Array.Empty<SftpFile>();
         }
         finally
@@ -76,11 +77,11 @@ public class SftpService : ISftpService
             client.Connect();
             using FileStream fileStream = File.OpenRead(localFilePath);
             client.UploadFile(fileStream, remoteFilePath);
-            logger?.LogInformation("Finished uploading the file [{localFilePath}] to [{remoteFilePath}]", localFilePath, remoteFilePath);
+            logger?.LogInformation("Finished uploading the file [{LocalFilePath}] to [{RemoteFilePath}]", localFilePath, remoteFilePath);
         }
         catch (Exception exception)
         {
-            logger?.LogError(exception, "Failed in uploading the file [{localFilePath}] to [{remoteFilePath}]", localFilePath, remoteFilePath);
+            logger?.LogError(exception, "Failed in uploading the file [{LocalFilePath}] to [{RemoteFilePath}]", localFilePath, remoteFilePath);
         }
         finally
         {
@@ -97,11 +98,11 @@ public class SftpService : ISftpService
             client.Connect();
             using FileStream fileStream = File.Create(localFilePath);
             client.DownloadFile(remoteFilePath, fileStream);
-            logger?.LogInformation("Finished downloading the file [{localFilePath}] from [{remoteFilePath}]", localFilePath, remoteFilePath);
+            logger?.LogInformation("Finished downloading the file [{LocalFilePath}] from [{RemoteFilePath}]", localFilePath, remoteFilePath);
         }
         catch (Exception exception)
         {
-            logger?.LogError(exception, "Failed in downloading the file [{localFilePath}] from [{remoteFilePath}]", localFilePath, remoteFilePath);
+            logger?.LogError(exception, "Failed in downloading the file [{LocalFilePath}] from [{RemoteFilePath}]", localFilePath, remoteFilePath);
         }
         finally
         {
@@ -117,11 +118,11 @@ public class SftpService : ISftpService
         {
             client.Connect();
             client.DeleteFile(remoteFilePath);
-            logger?.LogInformation("File [{remoteFilePath}] is deleted.", remoteFilePath);
+            logger?.LogInformation("File [{RemoteFilePath}] is deleted", remoteFilePath);
         }
         catch (Exception exception)
         {
-            logger?.LogError(exception, "Failed deleting the file [{remoteFilePath}]", remoteFilePath);
+            logger?.LogError(exception, "Failed deleting the file [{RemoteFilePath}]", remoteFilePath);
         }
         finally
         {

@@ -10,12 +10,12 @@ public static class SftpFileExtensionMethods
         int aw = Convert.ToInt32(file.OwnerCanWrite);
         int ax = Convert.ToInt32(file.OwnerCanExecute);
         int a = (1 * ax) + (2 * aw) + (4 * ar);
-        
+
         int gr = Convert.ToInt32(file.GroupCanRead);
         int gw = Convert.ToInt32(file.GroupCanWrite);
         int gx = Convert.ToInt32(file.GroupCanExecute);
         int g = (1 * gx) + (2 * gw) + (4 * gr);
-        
+
         int or = Convert.ToInt32(file.OthersCanRead);
         int ow = Convert.ToInt32(file.OthersCanWrite);
         int ox = Convert.ToInt32(file.OthersCanExecute);

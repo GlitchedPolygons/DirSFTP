@@ -1,6 +1,6 @@
 ﻿using Renci.SshNet.Sftp;
 
-namespace GlitchedPolygons.DirSFTP.Services;
+namespace GlitchedPolygons.DirSFTP.Services.SFTP;
 
 public interface ISftpService
 {
