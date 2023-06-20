@@ -79,7 +79,7 @@ else
 @code {
 
     private string currentDirectory = ".";
-    private SftpFile[]? files = null;
+    private IEnumerable<SftpFile>? files = null;
 
     protected override async Task OnInitializedAsync()
     {
