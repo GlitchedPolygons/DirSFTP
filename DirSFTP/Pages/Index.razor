@@ -17,12 +17,14 @@
 *@
 
 @inject IConfigStorage ConfigStorage
+@inject IFingerprintService FingerprintService
 @inject NavigationManager NavigationManager
 
 @page "/"
 
 @using GlitchedPolygons.DirSFTP.Services.Config
 @using GlitchedPolygons.DirSFTP.Models
+@using GlitchedPolygons.DirSFTP.Services.HostKey
 
 <PageTitle>DirSFTP</PageTitle>
 
@@ -42,7 +44,7 @@
 {
     @foreach (SftpConfig sftpConfig in sftpConfigs)
     {
-        <button >
+        <button @onclick="() => OnClickConnect(sftpConfig)">
             @sftpConfig.Username@@@sftpConfig.Host
         </button>
     }
@@ -52,7 +54,7 @@
     Add new connection
 </button>
 
-@code 
+@code
 {
     private IEnumerable<SftpConfig> sftpConfigs = null;
 
@@ -63,7 +65,16 @@
 
     private async Task OnClickConnect(SftpConfig config)
     {
-        
+        bool trustedHostKey = await FingerprintService.CheckFingerprint(config.Host, config.Port);
+
+        if (trustedHostKey)
+        {
+            // TODO: connect
+        }
+        else
+        {
+            // TODO: show alert to user in lower right corner, e.g. "Cancelled..."
+        }
     }
 
     private void OnClickAddNewConnection()
