@@ -103,7 +103,7 @@
         Private key
     </label>
 
-    <textarea @bind="privateKey" rows="7" class="form-control" placeholder="@privateKeyTooltip.TrimStart()" style="min-height: 64px; max-height: 512px;"></textarea>
+    <textarea @bind="privateKey" rows="7" class="form-control" placeholder="@PRIVATE_KEY_TOOLTIP.TrimStart()" style="min-height: 64px; max-height: 512px;"></textarea>
 
 </div>
 
@@ -151,7 +151,7 @@
     private string privateKeyPassphrase;
     private string remoteDirectory;
 
-        private const string privateKeyTooltip = @"
+        private const string PRIVATE_KEY_TOOLTIP = @"
 
 PEM-formatted private key. The following key types are supported:
 
