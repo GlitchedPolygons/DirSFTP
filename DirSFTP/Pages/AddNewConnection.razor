@@ -17,12 +17,15 @@
 *@
 
 @inject IConfigStorage ConfigStorage
+@inject IFingerprintService FingerprintService
 @inject NavigationManager NavigationManager
 
 @page "/add-new-connection"
 
 @using GlitchedPolygons.DirSFTP.Services.Config
+@using GlitchedPolygons.ExtensionMethods
 @using GlitchedPolygons.DirSFTP.Models
+@using GlitchedPolygons.DirSFTP.Services.HostKey
 
 <PageTitle>DirSFTP - Add new connection</PageTitle>
 
@@ -64,7 +67,7 @@
         Port
     </label>
 
-    <input type="number"
+    <input type="text"
            class="form-control"
            placeholder="Default port for SSH is 22"
            @bind="port" />
@@ -84,7 +87,7 @@
 
 </div>
 
-<div class="form-group mt-2">
+<div class="form-group mt-6 mb-6">
 
     <label class="form-label">
         Password
@@ -93,7 +96,22 @@
     <input type="password"
            class="form-control"
            placeholder="gaben"
+           style="margin-right: 4px;"
            @bind="password" />
+
+</div>
+
+<div class="form-group mt-2">
+
+    <input class="form-check-input"
+           type="checkbox"
+           @bind="savePassword"
+           id="savePassword">
+
+    <label class="form-check-label"
+           for="savePassword">
+        Save password
+    </label>
 
 </div>
 
@@ -129,7 +147,9 @@
            @bind="remoteDirectory" />
 </div>
 
-<div class="form-group mt-4">
+<div class="form-group mt-4"
+     style="padding-bottom: 8px;">
+
     <button class="btn btn-secondary"
             @onclick="OnClickCancel">
         Cancel
@@ -139,12 +159,14 @@
             @onclick="OnClickSave">
         Save
     </button>
+
 </div>
 
 @code
 {
     private string host;
-    private int port = 22;
+    private int? port;
+    private bool savePassword = true;
     private string username;
     private string password;
     private string privateKey;
@@ -171,19 +193,74 @@ Private keys can be encrypted using one of the following cipher methods:
     - AES-256-CBC
 ";
 
-    protected override async Task OnInitializedAsync()
-    {
-    }
-
     private void OnClickCancel()
     {
         NavigationManager.NavigateTo("/");
     }
 
-    private void OnClickSave()
+    private async Task OnClickSave()
     {
-    // TODO: save conn details to SecureStorage here
+        if (host.NullOrEmpty())
+        {
+            Application.Current?.MainPage?.DisplayAlert("Host undefined", "Please insert a valid host value into the host field!", "OK");
+            return;
+        }
 
+        if (username.NullOrEmpty())
+        {
+            Application.Current?.MainPage?.DisplayAlert("Username undefined", "Please insert a valid username value into the username field!", "OK");
+            return;
+        }
+
+        if (port is null or 0)
+        {
+            port = 22;
+        }
+
+        string hostId = $"{host}:{port}";
+
+        SftpConfig config = await ConfigStorage.Get(hostId);
+
+        if (config is null)
+        {
+            config = CreateConfig();
+
+            await ConfigStorage.Add(config);
+
+            goto exit;
+        }
+
+        if (Application.Current?.MainPage is null || await Application.Current.MainPage.DisplayAlert("Connection already exists", $"You already have a connection saved for {hostId} - how do you want to proceed?", "Overwrite existing", "Cancel"))
+        {
+            await ConfigStorage.Remove(hostId);
+        }
+        else
+        {
+            return;
+        }
+
+        config = CreateConfig();
+
+        await ConfigStorage.Add(config);
+
+        exit:
+
+        await FingerprintService.CheckFingerprint(host, port.Value);
+        
         NavigationManager.NavigateTo("/");
+    }
+
+    private SftpConfig CreateConfig()
+    {
+        return new SftpConfig
+        {
+            Host = host,
+            Port = port ?? 22,
+            Username = username,
+            PrivateKey = privateKey,
+            PrivateKeyPassphrase = privateKeyPassphrase,
+            Password = savePassword ? password : string.Empty,
+            DefaultRemoteDirectory = remoteDirectory.NullOrEmpty() ? "." : remoteDirectory
+        };
     }
 }
