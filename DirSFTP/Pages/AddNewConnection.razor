@@ -45,51 +45,131 @@
 <br />
 
 
-<label>Host</label>
-<input type="text"
-       placeholder="sftp.example.com"
-       @bind="host" />
+<div class="form-group mt-2">
 
-<label>Port</label>
-<input type="number"
-       placeholder="22"
-       @bind="port" />
+    <label class="form-label">
+        Host
+    </label>
 
-<label>Username</label>
-<input type="text"
-       placeholder="gordon"
-       @bind="username" />
+    <input type="text"
+           class="form-control"
+           placeholder="sftp.example.com"
+           @bind="host" />
 
-<label>Password</label>
-<input type="password"
-       @bind="password" />
+</div>
 
-<label>Private key</label>
-<textarea @bind="privateKey" rows="3"></textarea>
+<div class="form-group mt-2">
 
-<label>Private key passphrase</label>
-<input type="password" @bind="privateKeyPassphrase" />
+    <label class="form-label">
+        Port
+    </label>
 
-<label>Default remote directory</label>
-<Entry />
+    <input type="number"
+           class="form-control"
+           placeholder="Default port for SSH is 22"
+           @bind="port" />
 
-<button @onclick="OnClickCancel">
-    Cancel
-</button>
+</div>
 
-<button @onclick="OnClickSave">
-    Save
-</button>
+<div class="form-group mt-2">
+
+    <label class="form-label">
+        Username
+    </label>
+
+    <input type="text"
+           class="form-control"
+           placeholder="gordon"
+           @bind="username" />
+
+</div>
+
+<div class="form-group mt-2">
+
+    <label class="form-label">
+        Password
+    </label>
+
+    <input type="password"
+           class="form-control"
+           placeholder="gaben"
+           @bind="password" />
+
+</div>
+
+<div class="form-group mt-2">
+
+    <label class="form-label">
+        Private key
+    </label>
+
+    <textarea @bind="privateKey" rows="7" class="form-control" placeholder="@privateKeyTooltip.TrimStart()" style="min-height: 64px; max-height: 512px;"></textarea>
+
+</div>
+
+<div class="form-group mt-2">
+
+    <label class="form-label">
+        Private key passphrase
+    </label>
+
+    <input type="password"
+           class="form-control"
+           @bind="privateKeyPassphrase" />
+
+</div>
+
+<div class="form-group mt-2">
+
+    <label class="form-label">
+        Default remote directory
+    </label>
+
+    <input class="form-control"
+           @bind="remoteDirectory" />
+</div>
+
+<div class="form-group mt-4">
+    <button class="btn btn-secondary"
+            @onclick="OnClickCancel">
+        Cancel
+    </button>
+
+    <button class="btn btn-primary"
+            @onclick="OnClickSave">
+        Save
+    </button>
+</div>
 
 @code
 {
     private string host;
-    private int port;
+    private int port = 22;
     private string username;
     private string password;
     private string privateKey;
     private string privateKeyPassphrase;
     private string remoteDirectory;
+
+        private const string privateKeyTooltip = @"
+
+PEM-formatted private key. The following key types are supported:
+
+    - RSA in OpenSSL PEM and ssh.com format
+    - DSA in OpenSSL PEM and ssh.com format
+    - ECDSA 256/384/521 in OpenSSL PEM format
+    - ECDSA 256/384/521 in OpenSSH key format
+    - Ed25519 and RSA in OpenSSH key format
+
+Private keys can be encrypted using one of the following cipher methods:
+
+    - DES-EDE3-CBC
+    - DES-EDE3-CFB
+    - DES-CBC
+    - AES-128-CBC
+    - AES-192-CBC
+    - AES-256-CBC
+";
 
     protected override async Task OnInitializedAsync()
     {
