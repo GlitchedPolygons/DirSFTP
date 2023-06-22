@@ -8,6 +8,11 @@ h1:focus {
     outline: none;
 }
 
+button {
+    padding-left: 16px;
+    padding-right: 16px;
+}
+
 a, .btn-link {
     color: #0071c1;
 }

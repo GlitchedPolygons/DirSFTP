@@ -121,20 +121,23 @@ public class FingerprintService : IFingerprintService
         return JsonSerializer.Deserialize<IDictionary<string, string>>(json);
     }
 
-    public async Task<bool> DeleteStoredFingerprint(string host, int port)
+    public Task<bool> RemoveStoredFingerprint(string host, int port)
+    {
+        return RemoveStoredFingerprint($"{host}:{port}");
+    }
+
+    public async Task<bool> RemoveStoredFingerprint(string hostId)
     {
         IDictionary<string, string> storedFingerprints = await GetAllStoredFingerprints();
 
-        string dictionaryKey = $"{host}:{port}";
-
-        if (!storedFingerprints.ContainsKey(dictionaryKey))
+        if (!storedFingerprints.ContainsKey(hostId))
         {
             return false;
         }
 
         try
         {
-            storedFingerprints.Remove(dictionaryKey);
+            storedFingerprints.Remove(hostId);
 
             await UpdateStoredFingerprints(storedFingerprints);
 
@@ -146,7 +149,7 @@ public class FingerprintService : IFingerprintService
         }
     }
 
-    public Task DeleteAllStoredFingerprints()
+    public Task RemoveAllStoredFingerprints()
     {
         return UpdateStoredFingerprints(new Dictionary<string, string>());
     }

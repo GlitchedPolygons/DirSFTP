@@ -1,0 +1,120 @@
+﻿@*
+    DirSFTP
+    Copyright (C) 2023  Raphael Beck
+
+    This program is free software: you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
+
+    This program is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with this program.  If not, see <https://www.gnu.org/licenses/>.
+*@
+
+@inject IConfigStorage ConfigStorage
+@inject IFingerprintService FingerprintService
+@inject NavigationManager NavigationManager
+
+@page "/fingerprints"
+
+@using GlitchedPolygons.ExtensionMethods
+@using GlitchedPolygons.DirSFTP.Models
+@using GlitchedPolygons.DirSFTP.Services.Config
+@using GlitchedPolygons.DirSFTP.Services.HostKey
+
+<PageTitle>DirSFTP - Trusted host keys</PageTitle>
+
+<h1>
+    Trusted host key fingerprints
+</h1>
+
+<br />
+
+<table class="table">
+
+    <thead>
+    <tr>
+        <th>
+            Host
+        </th>
+        <th>
+            Fingerprint
+        </th>
+        <th>
+            Actions
+        </th>
+    </tr>
+    </thead>
+
+    <tbody>
+    @foreach (KeyValuePair<string, string> kvp in fingerprints)
+    {
+        <tr>
+            <td>
+                @kvp.Key
+            </td>
+            <td>
+                @kvp.Value
+            </td>
+            <td>
+                <a href="javascript:void(0)"
+                   @onclick="() => OnClickRemove(kvp.Key)">
+                    Remove
+                </a>
+            </td>
+        </tr>
+    }
+    </tbody>
+
+</table>
+
+<br />
+
+<button class="btn btn-primary"
+        @onclick="OnClickDone">
+    Done
+</button>
+
+@code
+{
+    private IDictionary<string, string> fingerprints = new Dictionary<string, string>();
+
+    protected override async Task OnInitializedAsync()
+    {
+        await Refresh();
+    }
+
+    private async Task Refresh()
+    {
+        fingerprints = await FingerprintService.GetAllStoredFingerprints();
+    }
+
+    private void OnClickDone()
+    {
+        NavigationManager.NavigateTo("/");
+    }
+
+    private async Task OnClickRemove(string key)
+    {
+        if (Application.Current?.MainPage is not null && !await Application.Current.MainPage.DisplayAlert("Are you sure?", $"Do you really want to remove {key} from your list of trusted host key fingerprints?", "Yes, remove", "No, keep"))
+        {
+            return;
+        }
+
+        bool success = await FingerprintService.RemoveStoredFingerprint(key);
+
+        if (!success && Application.Current?.MainPage is not null)
+        {
+            await Application.Current.MainPage.DisplayAlert("Removal failed", $"Failed to remove {key} from the list of trusted host key fingerprints.", "OK :/");
+        }
+        else
+        {
+            await Refresh();
+        }
+    }
+}
