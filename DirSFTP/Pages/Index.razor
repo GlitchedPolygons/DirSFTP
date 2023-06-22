@@ -25,22 +25,17 @@
 @using GlitchedPolygons.DirSFTP.Services.Config
 @using GlitchedPolygons.DirSFTP.Models
 @using GlitchedPolygons.DirSFTP.Services.HostKey
+@using GlitchedPolygons.ExtensionMethods
 
 <PageTitle>DirSFTP</PageTitle>
 
 <h1>
-    Home
+    Welcome to DirSFTP!
 </h1>
 
 <br />
 
-<h2>
-    Welcome to DirSFTP!
-</h2>
-
-<br />
-
-@if (sftpConfigs is not null)
+@if (sftpConfigs.NotNullNotEmpty())
 {
     <table class="table">
         <thead>
@@ -57,20 +52,24 @@
         @foreach (SftpConfig sftpConfig in sftpConfigs)
         {
             <tr>
-                <td>
-                    @sftpConfig.Username@@@sftpConfig.Host
+                <td style="font-weight: 600; word-wrap: anywhere">
+                    @sftpConfig.Username@@@sftpConfig.Host:@sftpConfig.Port/@sftpConfig.DefaultRemoteDirectory.TrimStart('/').TrimStart('\\')
                 </td>
                 <td>
                     <a href="javascript:void(0)"
+                       style="margin-right: 6px"
                        @onclick="() => OnClickConnect(sftpConfig)">
                         Connect
                     </a>
-                    
-                    <a href="javascript:void(0)" style="margin-left: 4px">
+
+                    <a href="javascript:void(0)"
+                       style="margin-right: 6px"
+                       @onclick="() => OnClickEdit(sftpConfig)">
                         Edit
                     </a>
-                    
-                    <a href="javascript:void(0)" style="margin-left: 4px">
+
+                    <a href="javascript:void(0)"
+                       @onclick="() => OnClickRemove(sftpConfig)">
                         Remove
                     </a>
                 </td>
@@ -83,17 +82,22 @@
 <br />
 
 <button @onclick="OnClickAddNewConnection"
-        class="btn btn-primary mt-4">
+        class="btn btn-primary mt-1">
     ﹢ Add new connection
 </button>
 
 @code
 {
-    private IEnumerable<SftpConfig> sftpConfigs = null;
+    private IList<SftpConfig> sftpConfigs = null;
 
     protected override async Task OnInitializedAsync()
     {
-        sftpConfigs = await ConfigStorage.GetAll();
+        await RefreshConfigList();
+    }
+
+    private async Task RefreshConfigList()
+    {
+        sftpConfigs = (await ConfigStorage.GetAll()).ToList();
     }
 
     private async Task OnClickConnect(SftpConfig config)
@@ -110,8 +114,38 @@
         }
     }
 
+    private async Task OnClickEdit(SftpConfig config)
+    {
+    // todo
+    }
+
+    private async Task OnClickRemove(SftpConfig config)
+    {
+        if (Application.Current?.MainPage is null)
+        {
+            return;
+        }
+
+        bool confirmed = await Application.Current.MainPage.DisplayAlert("Are you sure?", $"Do you really want to delete the saved connection details for {config.Username}@{config.Host}:{config.Port} ?", "Yes, remove", "No, keep");
+
+        if (!confirmed)
+        {
+            return;
+        }
+
+        bool success = await ConfigStorage.Remove(config.Id);
+
+        if (!success)
+        {
+            await Application.Current.MainPage.DisplayAlert("Error", $"Failed to delete the saved connection details for {config.Username}@{config.Host}:{config.Port}", "OK :/");
+            return;
+        }
+
+        await RefreshConfigList();
+    }
+
     private void OnClickAddNewConnection()
     {
-        NavigationManager.NavigateTo("/add-new-connection");
+        NavigationManager.NavigateTo("/connection-editor");
     }
 }

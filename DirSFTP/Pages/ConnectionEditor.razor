@@ -20,7 +20,7 @@
 @inject IFingerprintService FingerprintService
 @inject NavigationManager NavigationManager
 
-@page "/add-new-connection"
+@page "/connection-editor"
 
 @using GlitchedPolygons.DirSFTP.Services.Config
 @using GlitchedPolygons.ExtensionMethods
@@ -167,6 +167,7 @@
     private string host;
     private int? port;
     private bool savePassword = true;
+    private bool createNew = true;
     private string username;
     private string password;
     private string privateKey;
@@ -218,38 +219,36 @@ Private keys can be encrypted using one of the following cipher methods:
         }
 
         string hostId = $"{username}@{host}:{port}";
-        string hostIdSHA256 = hostId.SHA256();
+        string configId = hostId.SHA256();
 
-        SftpConfig config = await ConfigStorage.Get(hostIdSHA256);
+        SftpConfig config = await ConfigStorage.Get(configId);
 
         if (config is null)
         {
             config = CreateConfig();
 
-            await ConfigStorage.Add(config);
+            await ConfigStorage.Add(config, true);
 
             goto exit;
         }
 
-        if (Application.Current?.MainPage is null || await Application.Current.MainPage.DisplayAlert("Connection already exists", $"You already have a connection saved for {hostId} - how do you want to proceed?", "Overwrite existing", "Cancel"))
+        if (createNew)
         {
-            await ConfigStorage.Remove(hostIdSHA256);
-        }
-        else
-        {
-            return;
+            if (Application.Current?.MainPage is not null && !await Application.Current.MainPage.DisplayAlert("Connection already exists", $"You already have a connection saved for {hostId} - how do you want to proceed?", "Overwrite existing", "Cancel"))
+            {
+                return;
+            }
         }
 
         config = CreateConfig();
 
-        await ConfigStorage.Add(config);
+        await ConfigStorage.Add(config, true);
 
         exit:
 
-        if (await FingerprintService.CheckFingerprint(host, port.Value))
-        {
-            NavigationManager.NavigateTo("/");
-        }
+        await FingerprintService.CheckFingerprint(host, port.Value);
+
+        NavigationManager.NavigateTo("/");
     }
 
     private SftpConfig CreateConfig()

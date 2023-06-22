@@ -27,16 +27,21 @@ public class ConfigStorage : IConfigStorage
         return savedConnections.FirstOrDefault(c => c.Id == id);
     }
 
-    public async Task<bool> Add(SftpConfig config)
+    public async Task<bool> Add(SftpConfig config, bool overwriteExisting = false)
     {
         IEnumerable<SftpConfig> savedConnections = await GetAll();
 
-        if (savedConnections.Any(c => c.Id == config.Id))
+        if (!overwriteExisting && savedConnections.Any(c => c.Id == config.Id))
         {
             return false;
         }
 
-        string json = JsonSerializer.Serialize(savedConnections.Concat(new[] { config }));
+        savedConnections = savedConnections
+            .Where(c => c.Id != config.Id)
+            .Concat(new[] { config })
+            .OrderBy(c => c.Host);
+
+        string json = JsonSerializer.Serialize(savedConnections);
 
         string jsonBase64 = Convert.ToBase64String(json.UTF8GetBytes());
 
