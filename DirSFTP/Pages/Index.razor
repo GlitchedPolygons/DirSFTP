@@ -53,7 +53,7 @@
         @foreach (SftpConfig sftpConfig in sftpConfigs)
         {
             <tr>
-                <td style="font-weight: 600; word-wrap: anywhere">
+                <td style="word-wrap: anywhere">
                     @sftpConfig.Username@@@sftpConfig.Host:@sftpConfig.Port/@sftpConfig.DefaultRemoteDirectory.TrimStart('/').TrimStart('\\')
                 </td>
                 <td>
