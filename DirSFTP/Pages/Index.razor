@@ -42,13 +42,42 @@
 
 @if (sftpConfigs is not null)
 {
-    @foreach (SftpConfig sftpConfig in sftpConfigs)
-    {
-        <button class="btn btn-primary mt-4"
-                @onclick="() => OnClickConnect(sftpConfig)">
-            @sftpConfig.Username@@@sftpConfig.Host
-        </button>
-    }
+    <table class="table">
+        <thead>
+        <tr>
+            <th>
+                Connection
+            </th>
+            <th>
+                Actions
+            </th>
+        </tr>
+        </thead>
+        <tbody>
+        @foreach (SftpConfig sftpConfig in sftpConfigs)
+        {
+            <tr>
+                <td>
+                    @sftpConfig.Username@@@sftpConfig.Host
+                </td>
+                <td>
+                    <a href="javascript:void(0)"
+                       @onclick="() => OnClickConnect(sftpConfig)">
+                        Connect
+                    </a>
+                    
+                    <a href="javascript:void(0)" style="margin-left: 4px">
+                        Edit
+                    </a>
+                    
+                    <a href="javascript:void(0)" style="margin-left: 4px">
+                        Remove
+                    </a>
+                </td>
+            </tr>
+        }
+        </tbody>
+    </table>
 }
 
 <br />
