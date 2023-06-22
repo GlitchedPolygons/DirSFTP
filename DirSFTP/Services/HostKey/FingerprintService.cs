@@ -113,7 +113,7 @@ public class FingerprintService : IFingerprintService
 
         if (jsonBase64.NullOrEmpty())
         {
-            return null;
+            return new Dictionary<string, string>();
         }
 
         string json = jsonBase64.FromBase64String();

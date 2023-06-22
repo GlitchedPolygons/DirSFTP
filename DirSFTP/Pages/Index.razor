@@ -44,14 +44,18 @@
 {
     @foreach (SftpConfig sftpConfig in sftpConfigs)
     {
-        <button @onclick="() => OnClickConnect(sftpConfig)">
+        <button class="btn btn-primary mt-4"
+                @onclick="() => OnClickConnect(sftpConfig)">
             @sftpConfig.Username@@@sftpConfig.Host
         </button>
     }
 }
 
-<button @onclick="OnClickAddNewConnection">
-    Add new connection
+<br />
+
+<button @onclick="OnClickAddNewConnection"
+        class="btn btn-primary mt-4">
+    ﹢ Add new connection
 </button>
 
 @code
@@ -69,11 +73,11 @@
 
         if (trustedHostKey)
         {
-            // TODO: connect
+    // TODO: connect
         }
         else
         {
-            // TODO: show alert to user in lower right corner, e.g. "Cancelled..."
+    // TODO: show alert to user in lower right corner, e.g. "Cancelled..."
         }
     }
 

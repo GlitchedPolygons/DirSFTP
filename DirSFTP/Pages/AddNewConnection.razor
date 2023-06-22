@@ -87,7 +87,7 @@
 
 </div>
 
-<div class="form-group mt-6 mb-6">
+<div class="form-group mt-2">
 
     <label class="form-label">
         Password
@@ -101,7 +101,7 @@
 
 </div>
 
-<div class="form-group mt-2">
+<div class="form-group mt-3">
 
     <input class="form-check-input"
            type="checkbox"
@@ -217,9 +217,10 @@ Private keys can be encrypted using one of the following cipher methods:
             port = 22;
         }
 
-        string hostId = $"{host}:{port}";
+        string hostId = $"{username}@{host}:{port}";
+        string hostIdSHA256 = hostId.SHA256();
 
-        SftpConfig config = await ConfigStorage.Get(hostId);
+        SftpConfig config = await ConfigStorage.Get(hostIdSHA256);
 
         if (config is null)
         {
@@ -232,7 +233,7 @@ Private keys can be encrypted using one of the following cipher methods:
 
         if (Application.Current?.MainPage is null || await Application.Current.MainPage.DisplayAlert("Connection already exists", $"You already have a connection saved for {hostId} - how do you want to proceed?", "Overwrite existing", "Cancel"))
         {
-            await ConfigStorage.Remove(hostId);
+            await ConfigStorage.Remove(hostIdSHA256);
         }
         else
         {
@@ -245,9 +246,10 @@ Private keys can be encrypted using one of the following cipher methods:
 
         exit:
 
-        await FingerprintService.CheckFingerprint(host, port.Value);
-        
-        NavigationManager.NavigateTo("/");
+        if (await FingerprintService.CheckFingerprint(host, port.Value))
+        {
+            NavigationManager.NavigateTo("/");
+        }
     }
 
     private SftpConfig CreateConfig()
