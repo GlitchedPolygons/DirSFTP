@@ -104,7 +104,7 @@ else
             {
                 continue;
             }
-            
+
             <tr @onclick="() => OnClickFile(file)">
 
                 <td title="@file.FullName">
@@ -179,23 +179,21 @@ else
 
         if (file.IsDirectory)
         {
-            string directory = file.Name;
-
-            if (directory == "..")
+            if (file.Name == "..")
             {
-                if (directory.Contains('\\'))
+                if (currentDirectory.Contains('\\'))
                 {
-                    await OpenDirectory(directory[..directory.LastIndexOf('\\')]);
+                    await OpenDirectory(currentDirectory[..currentDirectory.LastIndexOf('\\')]);
                 }
                 else
                 {
-                    await OpenDirectory(directory[..directory.LastIndexOf('/')].Replace("\\", "/"));
+                    await OpenDirectory(currentDirectory[..currentDirectory.LastIndexOf('/')].Replace("\\", "/"));
                 }
 
                 return;
             }
 
-            await OpenDirectory(Path.Combine(currentDirectory, directory));
+            await OpenDirectory(file.FullName);
         }
         else if (file.IsRegularFile)
         {
@@ -224,6 +222,8 @@ else
             NavigationManager.NavigateTo("/");
             return;
         }
+
+        remoteDirectory = remoteDirectory.Replace('\\', '/');
 
         if (!sftpService.DirectoryExists(remoteDirectory))
         {
