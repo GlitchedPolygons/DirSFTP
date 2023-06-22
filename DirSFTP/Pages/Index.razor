@@ -110,7 +110,7 @@
         }
         else
         {
-    // TODO: show alert to user in lower right corner, e.g. "Cancelled..."
+            await Application.Current!.MainPage!.DisplayAlert("Connection failed", $"SFTP Connection to {config.Username}@{config.Host}:{config.Port} either failed or was prevented due to untrusted/mismatching host key fingerprints.", "OK");
         }
     }
 
