@@ -26,6 +26,7 @@
 @using GlitchedPolygons.DirSFTP.Models
 @using GlitchedPolygons.DirSFTP.Services.HostKey
 @using GlitchedPolygons.ExtensionMethods
+@using System.Text.Json
 
 <PageTitle>DirSFTP</PageTitle>
 
@@ -116,7 +117,13 @@
 
     private async Task OnClickEdit(SftpConfig config)
     {
-    // todo
+        await using MemoryStream utf8JsonStream = new(512);
+        
+        await JsonSerializer.SerializeAsync(utf8JsonStream, config);
+
+        string jsonBase64 = utf8JsonStream.ToArray().ToBase64String();
+        
+        NavigationManager.NavigateTo($"/connection-editor/{jsonBase64}");
     }
 
     private async Task OnClickRemove(SftpConfig config)

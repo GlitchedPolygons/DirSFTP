@@ -21,11 +21,13 @@
 @inject NavigationManager NavigationManager
 
 @page "/connection-editor"
+@page "/connection-editor/{ConnectionDetailsJsonB64}"
 
 @using GlitchedPolygons.ExtensionMethods
 @using GlitchedPolygons.DirSFTP.Models
 @using GlitchedPolygons.DirSFTP.Services.Config
 @using GlitchedPolygons.DirSFTP.Services.HostKey
+@using System.Text.Json
 
 <PageTitle>DirSFTP - Add new connection</PageTitle>
 
@@ -164,15 +166,18 @@
 
 @code
 {
-    private string host;
+    [Parameter]
+    public string ConnectionDetailsJsonB64 { get; set; } = null;
+
+    private string host = string.Empty;
     private int? port;
     private bool savePassword = true;
     private bool createNew = true;
-    private string username;
-    private string password;
-    private string privateKey;
-    private string privateKeyPassphrase;
-    private string remoteDirectory;
+    private string username = string.Empty;
+    private string password = string.Empty;
+    private string privateKey = string.Empty;
+    private string privateKeyPassphrase = string.Empty;
+    private string remoteDirectory = string.Empty;
 
         private const string PRIVATE_KEY_TOOLTIP = @"
 
@@ -193,6 +198,28 @@ Private keys can be encrypted using one of the following cipher methods:
     - AES-192-CBC
     - AES-256-CBC
 ";
+
+    protected override async Task OnInitializedAsync()
+    {
+        if (ConnectionDetailsJsonB64.NotNullNotEmpty())
+        {
+            string json = ConnectionDetailsJsonB64.FromBase64String();
+
+            using MemoryStream utf8JsonStream = new(json.UTF8GetBytes());
+
+            SftpConfig config = await JsonSerializer.DeserializeAsync<SftpConfig>(utf8JsonStream);
+
+            createNew = false;
+            host = config.Host;
+            port = config.Port;
+            savePassword = config.Password.NotNullNotEmpty();
+            username = config.Username ?? string.Empty;
+            password = config.Password ?? string.Empty;
+            privateKey = config.PrivateKey ?? string.Empty;
+            privateKeyPassphrase = config.PrivateKeyPassphrase ?? string.Empty;
+            remoteDirectory = config.DefaultRemoteDirectory ?? string.Empty;
+        }
+    }
 
     private void OnClickCancel()
     {
@@ -261,7 +288,7 @@ Private keys can be encrypted using one of the following cipher methods:
             PrivateKey = privateKey,
             PrivateKeyPassphrase = privateKeyPassphrase,
             Password = savePassword ? password : string.Empty,
-            DefaultRemoteDirectory = remoteDirectory.NullOrEmpty() ? "." : remoteDirectory
+            DefaultRemoteDirectory = remoteDirectory ?? string.Empty
         };
     }
 }
