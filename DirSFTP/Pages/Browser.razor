@@ -100,10 +100,15 @@ else
 
         @foreach (SftpFile file in files)
         {
+            if (file.Name == "." || (file.Name == ".." && currentDirectory.Count(c => c is '/' or '\\') <= 1))
+            {
+                continue;
+            }
+            
             <tr @onclick="() => OnClickFile(file)">
 
                 <td title="@file.FullName">
-                    @file.Name
+                    @file.Name@(file.IsDirectory ? "/" : "")
                 </td>
 
                 <td title="@file.LastAccessTimeUtc.ToString("yyyy-MM-dd HH:mm:ss") (UTC)">
