@@ -109,7 +109,7 @@ public class FingerprintService : IFingerprintService
 
     public async Task<IDictionary<string, string>> GetAllStoredFingerprints()
     {
-        string jsonBase64 = await SecureStorage.GetAsync("StoredFingerprints");
+        string jsonBase64 = await SecureStorage.GetAsync(Constants.PreferenceIds.SAVED_HOST_KEY_FINGERPRINTS);
 
         if (jsonBase64.NullOrEmpty())
         {
@@ -158,6 +158,6 @@ public class FingerprintService : IFingerprintService
     {
         string json = JsonSerializer.Serialize(fingerprints);
 
-        return SecureStorage.SetAsync("StoredFingerprints", json.ToBase64String());
+        return SecureStorage.SetAsync(Constants.PreferenceIds.SAVED_HOST_KEY_FINGERPRINTS, json.ToBase64String());
     }
 }

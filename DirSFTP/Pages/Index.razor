@@ -107,7 +107,10 @@
 
         if (trustedHostKey)
         {
-    // TODO: connect
+            await SecureStorage.SetAsync(Constants.PreferenceIds.LAST_SFTP_CONFIG_ID, config.Id);
+            await SecureStorage.SetAsync(Constants.PreferenceIds.LAST_DIRECTORY, config.DefaultRemoteDirectory);
+            
+            NavigationManager.NavigateTo("/browse");
         }
         else
         {

@@ -25,5 +25,6 @@ public static class Constants
         public const string SAVED_SFTP_CONNECTIONS = "SftpConnections";
         public const string LAST_SFTP_CONFIG_ID = "LastSftpConfigId";
         public const string LAST_DIRECTORY = "LastDirectory";
+        public const string SAVED_HOST_KEY_FINGERPRINTS = "StoredFingerprints";
     }
 }

@@ -43,7 +43,9 @@
 
 @if (currentSftpConfig is not null)
 {
-    <h2>Connected to @currentSftpConfig.Host as @currentSftpConfig.Username</h2>
+    <p>
+        Connected to @currentSftpConfig.Host:@currentSftpConfig.Port as @currentSftpConfig.Username
+    </p>
 }
 
 <br />
@@ -192,11 +194,11 @@ else
         }
         else if (file.IsRegularFile)
         {
-                // TODO
+    // TODO
         }
         else
         {
-                // TODO
+    // TODO
         }
     }
 
