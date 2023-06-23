@@ -17,14 +17,16 @@
 *@
 
 @inject IConfigStorage ConfigStorage
+@inject IViewportService ViewportService
 @inject IFingerprintService FingerprintService
 @inject NavigationManager NavigationManager
 
 @page "/"
 
-@using GlitchedPolygons.DirSFTP.Services.Config
 @using GlitchedPolygons.DirSFTP.Models
+@using GlitchedPolygons.DirSFTP.Services.Config
 @using GlitchedPolygons.DirSFTP.Services.HostKey
+@using GlitchedPolygons.DirSFTP.Services.Viewport
 @using GlitchedPolygons.ExtensionMethods
 @using System.Text.Json
 
@@ -38,7 +40,20 @@
 
 @if (sftpConfigs.NotNullNotEmpty())
 {
-    <table class="table">
+    <div class="mobile-only">
+        <div class="btn-group" role="group" aria-label="Button group with nested dropdown">
+            <button type="button" class="btn btn-primary">Primary</button>
+            <div class="btn-group" role="group">
+                <button id="btnGroupDrop1" type="button" class="btn btn-primary dropdown-toggle" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false"></button>
+                <div class="dropdown-menu" aria-labelledby="btnGroupDrop1" style="">
+                    <a class="dropdown-item" href="#">Dropdown link</a>
+                    <a class="dropdown-item" href="#">Dropdown link</a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <table class="table @(sftpConfigs.Count > 2 ? "table-striped" : "") desktop-only">
         <thead>
         <tr>
             <th>
@@ -109,7 +124,7 @@
         {
             await SecureStorage.SetAsync(Constants.PreferenceIds.LAST_SFTP_CONFIG_ID, config.Id);
             await SecureStorage.SetAsync(Constants.PreferenceIds.LAST_DIRECTORY, config.DefaultRemoteDirectory.NullOrEmpty() ? "/" : config.DefaultRemoteDirectory);
-            
+
             NavigationManager.NavigateTo("/browse");
         }
         else
@@ -121,11 +136,11 @@
     private async Task OnClickEdit(SftpConfig config)
     {
         await using MemoryStream utf8JsonStream = new(512);
-        
+
         await JsonSerializer.SerializeAsync(utf8JsonStream, config);
 
         string jsonBase64 = utf8JsonStream.ToArray().ToBase64String();
-        
+
         NavigationManager.NavigateTo($"/connection-editor/{jsonBase64}");
     }
 

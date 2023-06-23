@@ -14,7 +14,14 @@
 
 	<div class="status-bar-safe-area"></div>
 
-	<div id="app">Loading...</div>
+	<div id="app">
+		<span style="font-size: 1.75rem">
+			<br />&nbsp;&nbsp;&nbsp;&nbsp;
+			<strong>
+				Loading...
+			</strong>
+		</span>
+	</div>
 
 	<div id="blazor-error-ui">
 		An unhandled error has occurred.
@@ -22,8 +29,16 @@
 		<a class="dismiss">🗙</a>
 	</div>
 
-	<script src="_framework/blazor.webview.js" autostart="false"></script>
+	<script>
+		window.getWindowDimensions = function () {
+			return {
+				width: window.innerWidth,
+				height: window.innerHeight
+			};
+		};
+	</script>
 
+	<script src="_framework/blazor.webview.js" autostart="false"></script>
 </body>
 
 </html>

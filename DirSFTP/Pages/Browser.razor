@@ -191,6 +191,7 @@ else
 
         if (currentSftpConfig is null)
         {
+            await Application.Current!.MainPage!.DisplayAlert("Please select a connection", "To browse a remote SFTP server, on the app's home page select a connection from your list of saved connections or add a new one to get started.", "OK");
             NavigationManager.NavigateTo("/");
             return;
         }

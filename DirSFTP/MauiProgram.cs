@@ -18,6 +18,7 @@
 
 using GlitchedPolygons.DirSFTP.Services.Config;
 using GlitchedPolygons.DirSFTP.Services.HostKey;
+using GlitchedPolygons.DirSFTP.Services.Viewport;
 
 namespace GlitchedPolygons.DirSFTP;
 
@@ -34,6 +35,7 @@ public static class MauiProgram
         builder.Services.AddMauiBlazorWebView();
 
         builder.Services.AddTransient<IConfigStorage, ConfigStorage>();
+        builder.Services.AddTransient<IViewportService, ViewportService>();
         builder.Services.AddTransient<IFingerprintService, FingerprintService>();
 
 #if DEBUG
