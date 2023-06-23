@@ -107,3 +107,18 @@ a, .btn-link {
     .underline-on-hover:hover {
         text-decoration: underline;
     }
+
+@media (max-width: 768px) {
+
+    .stretch-when-narrow {
+        width: 100%;
+        margin-top: 8px;
+    }
+}
+
+@media (max-width: 768px) {
+
+    .dirsyncsftp-link {
+        display: none;
+    }
+}

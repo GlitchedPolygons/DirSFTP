@@ -47,7 +47,7 @@
                     id="heading_@kvp.Key.SHA1()">
 
                     <button class="accordion-button collapsed" 
-                            style="word-wrap: everywhere"
+                            style="word-wrap: anywhere"
                             type="button" 
                             aria-expanded="false" 
                             data-bs-toggle="collapse" 
@@ -68,6 +68,7 @@
                         <strong><code>@kvp.Value</code></strong><br />
 
                         <button class="btn btn-danger mt-4"
+                                type="button"
                                 @onclick="() => OnClickRemove(kvp.Key)">
                             Remove
                         </button>
@@ -125,6 +126,9 @@
         @onclick="OnClickDone">
     Done
 </button>
+
+<br />
+<br />
 
 @code
 {

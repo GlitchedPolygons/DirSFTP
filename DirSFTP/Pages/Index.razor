@@ -40,53 +40,73 @@
 
 @if (sftpConfigs.NotNullNotEmpty())
 {
-    <div class="mobile-only" 
-         style="width: 100%">
+    <div id="accordion" class="accordion mobile-only">
 
         @foreach (SftpConfig sftpConfig in sftpConfigs)
         {
-            <div class="btn-group mt-4"
-                 style="width: 100%"
-                 role="group">
+            <div class="accordion-item">
 
-                <button type="button"
-                        style="word-wrap: anywhere; text-align: left;"
-                        class="btn btn-outline-secondary"
-                        @onclick="() => OnClickConnect(sftpConfig)">
-                    @sftpConfig.Username@@@sftpConfig.Host:@sftpConfig.Port/@sftpConfig.DefaultRemoteDirectory.TrimStart('/').TrimStart('\\')
-                </button>
+                <h2 class="accordion-header" 
+                    id="heading_@sftpConfig.Id">
 
-                <div class="btn-group" 
-                     role="group">
-
-                    <button id="btnGroupDrop1" 
-                            type="button"
-                            class="btn btn-outline-secondary dropdown-toggle"
-                            data-bs-toggle="dropdown" 
-                            aria-haspopup="true" 
-                            aria-expanded="false">
+                    <button class="accordion-button collapsed" 
+                            style="word-wrap: anywhere"
+                            type="button" 
+                            aria-expanded="false" 
+                            data-bs-toggle="collapse"
+                            data-bs-target="#collapse_@sftpConfig.Id" 
+                            aria-controls="collapse_@sftpConfig.Id)">
+                        @sftpConfig.Username@@@sftpConfig.Host:@sftpConfig.Port
                     </button>
 
-                    <div class="dropdown-menu" aria-labelledby="btnGroupDrop1" style="">
+                </h2>
 
-                        <a class="dropdown-item"
-                           href="javascript:void(0)"
-                           @onclick="() => OnClickConnect(sftpConfig)">
+                <div id="collapse_@sftpConfig.Id"
+                     class="accordion-collapse collapse"
+                     aria-labelledby="heading_@sftpConfig.Id"
+                     data-bs-parent="#accordion">
+
+                    <div class="accordion-body">
+
+                        <p style="margin-bottom: -2px">
+                            Default remote directory:
+                        </p>
+
+                        <code style="word-wrap: anywhere"><strong>/@sftpConfig.DefaultRemoteDirectory.Replace('\\', '/').TrimStart('/')</strong></code><br /><br />
+                        
+                        @*
+
+                        <p style="margin-bottom: -2px">
+                            Host unique id:
+                        </p>
+
+                        <code style="word-wrap: anywhere"><strong>@sftpConfig.Id</strong></code><br /><br />
+
+                        *@
+
+                        <p style="margin-top: -2px; margin-bottom: -2px">
+                            Host key fingerprint:
+                        </p>
+
+                        <code style="word-wrap: anywhere"><strong>@(fingerprints.TryGetValue($"{sftpConfig.Host}:{sftpConfig.Port}", out string fp) ? fp : "(unavailable)")</strong></code><br /><br />
+
+                        <button class="btn btn-primary stretch-when-narrow"
+                                type="button"
+                                @onclick="() => OnClickConnect(sftpConfig)">
                             Connect
-                        </a>
+                        </button>
 
-                        <a class="dropdown-item" 
-                           href="javascript:void(0)"
-                           @onclick="() => OnClickEdit(sftpConfig)">
-                            Edit
-                        </a>
+                        <button class="btn btn-secondary stretch-when-narrow"
+                                type="button"
+                                @onclick="() => OnClickEdit(sftpConfig)">
+                            Modify
+                        </button>
 
-                        <a class="dropdown-item"
-                           href="javascript:void(0)"
-                           style="color: red;"
-                           @onclick="() => OnClickRemove(sftpConfig)">
+                        <button class="btn btn-danger stretch-when-narrow"
+                                type="button"
+                                @onclick="() => OnClickRemove(sftpConfig)">
                             Remove
-                        </a>
+                        </button>
                     </div>
                 </div>
             </div>
@@ -108,8 +128,9 @@
         @foreach (SftpConfig sftpConfig in sftpConfigs)
         {
             <tr>
-                <td style="word-wrap: anywhere">
-                    @sftpConfig.Username@@@sftpConfig.Host:@sftpConfig.Port/@sftpConfig.DefaultRemoteDirectory.TrimStart('/').TrimStart('\\')
+                <td style="word-wrap: anywhere" 
+                    title="Host key fingerprint: @(fingerprints.TryGetValue($"{sftpConfig.Host}:{sftpConfig.Port}", out string fp) ? fp : "(unavailable)")">
+                        @sftpConfig.Username@@@sftpConfig.Host:@sftpConfig.Port/@sftpConfig.DefaultRemoteDirectory.Replace('\\', '/').TrimStart('/')
                 </td>
                 <td>
                     <a href="javascript:void(0)"
@@ -123,7 +144,7 @@
                        style="margin-right: 16px"
                        class="underline-on-hover"
                        @onclick="() => OnClickEdit(sftpConfig)">
-                        Edit
+                        Modify
                     </a>
 
                     <a href="javascript:void(0)"
@@ -146,12 +167,19 @@
     Add new connection
 </button>
 
+<br />
+<br />
+
 @code
 {
     private IList<SftpConfig> sftpConfigs = null;
 
+    private IDictionary<string, string> fingerprints = new Dictionary<string, string>();
+
     protected override async Task OnInitializedAsync()
     {
+        fingerprints = await FingerprintService.GetAllStoredFingerprints();
+
         await RefreshConfigList();
     }
 

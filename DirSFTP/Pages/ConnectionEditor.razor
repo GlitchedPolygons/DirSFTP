@@ -32,7 +32,7 @@
 <PageTitle>DirSFTP - Add new connection</PageTitle>
 
 <h1>
-    Add new SFTP connection
+    @(createNew ? "Add new" : "Modify") SFTP connection @(createNew ? "" : "details")
 </h1>
 
 <br />
@@ -44,8 +44,6 @@
 <p>
     Make sure to double-check all the fields against typos!
 </p>
-
-<br />
 
 
 <div class="form-group mt-2">
@@ -87,20 +85,6 @@
 
 </div>
 
-<div class="form-group mt-2">
-
-    <label class="form-label">
-        Password
-    </label>
-
-    <input type="password"
-           class="form-control"
-           placeholder="gaben"
-           style="margin-right: 4px;"
-           @bind="password" />
-
-</div>
-
 <div class="form-group mt-3">
 
     <input class="form-check-input"
@@ -112,6 +96,20 @@
            for="savePassword">
         Save password
     </label>
+
+</div>
+
+<div class="form-group mt-2">
+
+    <label class="form-label">
+        Password
+    </label>
+
+    <input type="password"
+           class="form-control"
+           placeholder="gaben"
+           style="margin-right: 4px;"
+           @bind="password" />
 
 </div>
 
@@ -152,17 +150,20 @@
 <div class="form-group mt-4"
      style="padding-bottom: 8px;">
 
-    <button class="btn btn-secondary"
+    <button class="btn btn-secondary stretch-when-narrow"
             @onclick="OnClickCancel">
         Cancel
     </button>
 
-    <button class="btn btn-primary"
+    <button class="btn btn-primary stretch-when-narrow"
             @onclick="OnClickSave">
         Save
     </button>
 
 </div> 
+
+<br />
+<br />
 
 @code
 {
