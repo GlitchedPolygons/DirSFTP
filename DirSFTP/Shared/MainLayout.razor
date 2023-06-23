@@ -1,4 +1,5 @@
-﻿@*
+﻿@using GlitchedPolygons.ExtensionMethods;
+@*
     DirSFTP
     Copyright (C) 2023  Raphael Beck
 
@@ -17,6 +18,11 @@
 *@
 
 @inherits LayoutComponentBase
+
+@if (darkTheme)
+{
+    <link href="css/dark.css" rel="stylesheet" />
+}
 
 <div class="page">
     
@@ -48,5 +54,19 @@
         <article class="content px-4">
             @Body
         </article>
+
     </main>
+
 </div>
+
+@code
+{
+    private bool darkTheme = true;
+
+    protected override async Task OnInitializedAsync()
+    {
+        string darkThemePreference = await SecureStorage.GetAsync(Constants.PreferenceIds.DARK_THEME);
+
+        darkTheme = darkThemePreference.NullOrEmpty() || darkThemePreference.ToLowerInvariant() == "true";
+    }
+}

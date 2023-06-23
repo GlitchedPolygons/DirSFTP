@@ -22,6 +22,7 @@ public static class Constants
 {
     public static class PreferenceIds
     {
+        public const string DARK_THEME = "DarkTheme";
         public const string SAVED_SFTP_CONNECTIONS = "SftpConnections";
         public const string LAST_SFTP_CONFIG_ID = "LastSftpConfigId";
         public const string LAST_DIRECTORY = "LastDirectory";
