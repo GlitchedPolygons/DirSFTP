@@ -131,9 +131,27 @@ code {
     max-width: 512px;
 }
 
-.oi-account-logout:hover {
-    color: red;
+.oi-trash,
+.oi-pencil,
+.oi-shield {
+    margin-right: 6.666px;
 }
+
+    .oi-trash:hover,
+    .oi-account-logout:hover {
+        color: red;
+        cursor: pointer;
+    }
+
+    .oi-pencil:hover {
+        color: orange;
+        cursor: pointer;
+    }
+
+    .oi-shield:hover {
+        color: cyan;
+        cursor: pointer;
+    }
 
 .table tbody tr:hover,
 .table tbody tr:hover td,

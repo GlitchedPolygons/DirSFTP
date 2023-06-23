@@ -102,8 +102,12 @@ else
 
         <tr>
 
+            <th style="min-width: 96px">
+                Actions
+            </th>
+
             <th style="width: 66%">
-                Name
+                File or directory name
             </th>
 
             <th title="Format: yyyy-MM-dd HH:mm:ss"
@@ -141,10 +145,33 @@ else
                 continue;
             }
 
-            <tr @onclick="() => OnClickFile(file)">
+            <tr>
+
+                <td>
+                    <span class="oi oi-trash"
+                          title="Delete"
+                          @onclick="() => OnClickDelete(file)">
+                    </span>
+
+                    <span class="oi oi-pencil"
+                          title="Rename"
+                          @onclick="() => OnClickRename(file)">
+                    </span>
+
+                    <span class="oi oi-shield"
+                          title="Set permissions"
+                          @onclick="() => OnClickSetPermissions(file)">
+                    </span>
+                </td>
 
                 <td title="@file.FullName">
-                    @file.Name@(file.IsDirectory ? "/" : "")
+
+                    <a href="javascript:void(0)"
+                       class="underline-on-hover"
+                       @onclick="() => OnClickFile(file)">
+                          @file.Name@(file.IsDirectory ? "/" : "")
+                    </a>
+
                 </td>
 
                 <td title="@file.LastAccessTimeUtc.ToString("yyyy-MM-dd HH:mm:ss") (UTC)">
@@ -173,6 +200,16 @@ else
         </tbody>
 
     </table>
+
+    <br />
+
+    <button @onclick="OnClickUpload"
+            class="btn btn-primary mt-1">
+        Upload
+    </button>
+
+    <br />
+    <br />
 }
 
 @code
@@ -259,11 +296,11 @@ else
         }
         else if (file.IsRegularFile)
         {
-    // TODO
+            // TODO
         }
         else
         {
-    // TODO
+            // TODO
         }
     }
 
@@ -321,5 +358,25 @@ else
         files = sftpService.ListAllFiles(currentDirectory);
 
         await SecureStorage.SetAsync(Constants.PreferenceIds.LAST_DIRECTORY, currentDirectory);
+    }
+
+    private void OnClickUpload()
+    {
+        // TODO: implement file upload here (+ drag & drop too!)
+    }
+
+    private void OnClickRename(SftpFile file)
+    {
+        // TODO: implement file and directory renaming here (with a dialog prompt - use DisplayPromptAsync to do it easily)
+    }
+
+    private void OnClickSetPermissions(SftpFile file)
+    {
+        // TODO: implement chmod here (but expect nothing...)
+    }
+
+    private void OnClickDelete(SftpFile file)
+    {
+        // TODO: implement file deletion here (with a dialog prompt "Are you sure?")
     }
 }
