@@ -1,3 +1,84 @@
+body {
+    background-color: #2b2b2b;
+}
+
+h1, h2, h3 {
+    color: aliceblue;
+}
+
+a, p, h4, h5, h6, tr, td, th, span, table, label, .form-label {
+    color: #d5d5d5;
+}
+
+    a:hover {
+        color: #93cadb;
+    }
+
+.top-row-links {
+    border: none !important;
+    outline: none !important;
+    background-color: #1d1d1d !important;
+}
+
+table, tr, th, td, thead, tbody {
+    border-color: #4e4e4e !important;
+    outline-color: #4e4e4e;
+}
+
+.accordion-item,
+.accordion-header,
+.accordion-button,
+.accordion-collapse {
+    color: #d5d5d5 !important;
+    border-radius: 6px !important;
+    border-color: #3c3c3c;
+    background-color: #1d1d1d !important;
+}
+
+    .accordion-button.collapsed {
+        background: red
+    }
+
+        .accordion-button.collapsed::after {
+            background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' fill='%23fff'%3e%3cpath fill-rule='evenodd' d='M1.646 4.646a.5.5 0 0 1 .708 0L8 10.293l5.646-5.647a.5.5 0 0 1 .708.708l-6 6a.5.5 0 0 1-.708 0l-6-6a.5.5 0 0 1 0-.708z'/%3e%3c/svg%3e");
+        }
+
+    .accordion-button:not(.collapsed)::after,
+    .accordion-button:focus::after,
+    .accordion-button:active::after {
+        background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' fill='%2334a8eb'%3e%3cpath fill-rule='evenodd' d='M1.646 4.646a.5.5 0 0 1 .708 0L8 10.293l5.646-5.647a.5.5 0 0 1 .708.708l-6 6a.5.5 0 0 1-.708 0l-6-6a.5.5 0 0 1 0-.708z'/%3e%3c/svg%3e");
+    }
+
 code {
-    color: red;
+    color: #9d3eeb
+}
+
+.form-control {
+    color: #d5d5d5;
+    border-color: #4e4e4e;
+    background-color: #1d1d1d;
+}
+
+    .form-control:focus {
+        color: #e8e8e8;
+        border-color: #6c6c6c;
+        background-color: #1f1f1f;
+    }
+
+.btn-primary {
+    color: #fff;
+    background-color: #1a87bd;
+}
+
+    .btn-primary:hover {
+        color: white !important;
+        background-color: #1174a6 !important;
+    }
+
+
+.table tbody tr:hover,
+.table tbody tr:hover td,
+.table tbody tr:hover th {
+    background: #22313F !important;
+    color: #fff !important;
 }

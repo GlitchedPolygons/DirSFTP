@@ -1,5 +1,4 @@
-﻿@using GlitchedPolygons.ExtensionMethods;
-@*
+﻿@*
     DirSFTP
     Copyright (C) 2023  Raphael Beck
 
@@ -18,6 +17,8 @@
 *@
 
 @inject NavigationManager NavigationManager
+
+@using GlitchedPolygons.ExtensionMethods;
 
 <div class="top-row ps-3 navbar navbar-dark">
 
@@ -129,6 +130,6 @@
 
         await SecureStorage.SetAsync(Constants.PreferenceIds.DARK_THEME, darkTheme.ToString());
 
-        NavigationManager.NavigateTo(NavigationManager.Uri); // TODO: does not update immediately; need to check how to trigger an event that executes the code inside MainLayout.razor
+        NavigationManager.NavigateTo(NavigationManager.Uri, true);
     }
 }

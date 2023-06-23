@@ -113,7 +113,7 @@
         }
     </div>
 
-    <table class="table @(sftpConfigs.Count > 2 ? "table-striped" : "") desktop-only">
+    <table class="table table-hover @(sftpConfigs.Count > 2 ? "table-striped" : "") desktop-only">
         <thead>
         <tr>
             <th>
@@ -132,7 +132,7 @@
                     title="Host key fingerprint: @(fingerprints.TryGetValue($"{sftpConfig.Host}:{sftpConfig.Port}", out string fp) ? fp : "(unavailable)")">
                         @sftpConfig.Username@@@sftpConfig.Host:@sftpConfig.Port/@sftpConfig.DefaultRemoteDirectory.Replace('\\', '/').TrimStart('/')
                 </td>
-                <td>
+                <td style="min-width: 128px; white-space: nowrap">
                     <a href="javascript:void(0)"
                        style="margin-right: 16px"
                        class="underline-on-hover"
