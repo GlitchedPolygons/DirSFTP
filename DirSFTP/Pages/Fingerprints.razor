@@ -35,7 +35,51 @@
 
 <br />
 
-<table class="table @(fingerprints.Count > 2 ? "table-striped" : "")">
+<div class="mobile-only">
+
+    <div class="accordion" id="accordion">
+
+        @foreach (KeyValuePair<string, string> kvp in fingerprints)
+        {
+            <div class="accordion-item">
+
+                <h2 class="accordion-header" 
+                    id="heading_@kvp.Key.SHA1()">
+
+                    <button class="accordion-button collapsed" 
+                            style="word-wrap: everywhere"
+                            type="button" 
+                            aria-expanded="false" 
+                            data-bs-toggle="collapse" 
+                            data-bs-target="#collapse_@kvp.Key.SHA1()" 
+                            aria-controls="collapse_@kvp.Key.SHA1()">
+                        @kvp.Key
+                    </button>
+
+                </h2>
+
+                <div id="collapse_@kvp.Key.SHA1()" 
+                     class="accordion-collapse collapse" 
+                     aria-labelledby="heading_@kvp.Key.SHA1()" 
+                     data-bs-parent="#accordion">
+
+                    <div class="accordion-body">
+
+                        <strong><code>@kvp.Value</code></strong><br />
+
+                        <button class="btn btn-danger mt-4"
+                                @onclick="() => OnClickRemove(kvp.Key)">
+                            Remove
+                        </button>
+                    </div>
+                </div>
+            </div>
+        }
+
+    </div>
+</div>
+
+<table class="table @(fingerprints.Count > 2 ? "table-striped" : "") desktop-only">
 
     <thead>
     <tr>
@@ -62,7 +106,9 @@
                 @kvp.Value
             </td>
             <td>
-                <a href="javascript:void(0)"
+                <a class="underline-on-hover" 
+                   style="color: red" 
+                   href="javascript:void(0)"
                    @onclick="() => OnClickRemove(kvp.Key)">
                     Remove
                 </a>
