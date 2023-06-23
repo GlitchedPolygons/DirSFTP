@@ -40,17 +40,57 @@
 
 @if (sftpConfigs.NotNullNotEmpty())
 {
-    <div class="mobile-only">
-        <div class="btn-group" role="group" aria-label="Button group with nested dropdown">
-            <button type="button" class="btn btn-primary">Primary</button>
-            <div class="btn-group" role="group">
-                <button id="btnGroupDrop1" type="button" class="btn btn-primary dropdown-toggle" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false"></button>
-                <div class="dropdown-menu" aria-labelledby="btnGroupDrop1" style="">
-                    <a class="dropdown-item" href="#">Dropdown link</a>
-                    <a class="dropdown-item" href="#">Dropdown link</a>
+    <div class="mobile-only" 
+         style="width: 100%">
+
+        @foreach (SftpConfig sftpConfig in sftpConfigs)
+        {
+            <div class="btn-group mt-4"
+                 style="width: 100%"
+                 role="group">
+
+                <button type="button"
+                        style="word-wrap: anywhere; text-align: left;"
+                        class="btn btn-outline-secondary"
+                        @onclick="() => OnClickConnect(sftpConfig)">
+                    @sftpConfig.Username@@@sftpConfig.Host:@sftpConfig.Port/@sftpConfig.DefaultRemoteDirectory.TrimStart('/').TrimStart('\\')
+                </button>
+
+                <div class="btn-group" 
+                     role="group">
+
+                    <button id="btnGroupDrop1" 
+                            type="button"
+                            class="btn btn-outline-secondary dropdown-toggle"
+                            data-bs-toggle="dropdown" 
+                            aria-haspopup="true" 
+                            aria-expanded="false">
+                    </button>
+
+                    <div class="dropdown-menu" aria-labelledby="btnGroupDrop1" style="">
+
+                        <a class="dropdown-item"
+                           href="javascript:void(0)"
+                           @onclick="() => OnClickConnect(sftpConfig)">
+                            Connect
+                        </a>
+
+                        <a class="dropdown-item" 
+                           href="javascript:void(0)"
+                           @onclick="() => OnClickEdit(sftpConfig)">
+                            Edit
+                        </a>
+
+                        <a class="dropdown-item"
+                           href="javascript:void(0)"
+                           style="color: red;"
+                           @onclick="() => OnClickRemove(sftpConfig)">
+                            Remove
+                        </a>
+                    </div>
                 </div>
             </div>
-        </div>
+        }
     </div>
 
     <table class="table @(sftpConfigs.Count > 2 ? "table-striped" : "") desktop-only">
@@ -73,18 +113,22 @@
                 </td>
                 <td>
                     <a href="javascript:void(0)"
-                       style="margin-right: 6px"
+                       style="margin-right: 16px"
+                       class="underline-on-hover"
                        @onclick="() => OnClickConnect(sftpConfig)">
                         Connect
                     </a>
 
                     <a href="javascript:void(0)"
-                       style="margin-right: 6px"
+                       style="margin-right: 16px"
+                       class="underline-on-hover"
                        @onclick="() => OnClickEdit(sftpConfig)">
                         Edit
                     </a>
 
                     <a href="javascript:void(0)"
+                       style="color: red;"
+                       class="underline-on-hover"
                        @onclick="() => OnClickRemove(sftpConfig)">
                         Remove
                     </a>

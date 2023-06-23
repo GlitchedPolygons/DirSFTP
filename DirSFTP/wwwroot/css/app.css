@@ -99,3 +99,11 @@ a, .btn-link {
         display: none;
     }
 }
+
+.underline-on-hover {
+    text-decoration: none;
+}
+
+    .underline-on-hover:hover {
+        text-decoration: underline;
+    }
