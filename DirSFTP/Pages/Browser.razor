@@ -82,6 +82,7 @@
     <p>
         Loading...
     </p>
+
     <div class="progress"
          style="max-width: 420px">
         <div class="progress-bar progress-bar-striped progress-bar-animated"
@@ -95,7 +96,7 @@
 }
 else
 {
-    <table class="table">
+    <table class="table @(files.Count() > 2 ? "table-striped" : "")">
 
         <thead>
 
