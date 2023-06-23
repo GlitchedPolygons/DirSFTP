@@ -197,6 +197,21 @@ else
             return;
         }
 
+        if (currentSftpConfig.PrivateKey.NullOrEmpty() && currentSftpConfig.Password.NullOrEmpty())
+        {
+            string password = await Application.Current!.MainPage!.DisplayPromptAsync("Enter password", $"Please enter the password for user {currentSftpConfig.Username} on {currentSftpConfig.Host}:{currentSftpConfig.Port}", "Login", "Cancel");
+
+            if (password.NullOrEmpty())
+            {
+                NavigationManager.NavigateTo("/");
+                return;
+            }
+            else
+            {
+                currentSftpConfig.Password = password;
+            }
+        }
+
         if (currentDirectory.NullOrEmpty())
         {
             currentDirectory = currentSftpConfig.DefaultRemoteDirectory;

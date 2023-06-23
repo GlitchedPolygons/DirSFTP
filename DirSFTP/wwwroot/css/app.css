@@ -122,3 +122,7 @@ a, .btn-link {
         display: none;
     }
 }
+
+code {
+    color: #8403fc;
+}
