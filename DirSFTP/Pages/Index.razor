@@ -84,7 +84,7 @@
 
 <button @onclick="OnClickAddNewConnection"
         class="btn btn-primary mt-1">
-    ﹢ Add new connection
+    Add new connection
 </button>
 
 @code
@@ -108,7 +108,7 @@
         if (trustedHostKey)
         {
             await SecureStorage.SetAsync(Constants.PreferenceIds.LAST_SFTP_CONFIG_ID, config.Id);
-            await SecureStorage.SetAsync(Constants.PreferenceIds.LAST_DIRECTORY, config.DefaultRemoteDirectory);
+            await SecureStorage.SetAsync(Constants.PreferenceIds.LAST_DIRECTORY, config.DefaultRemoteDirectory.NullOrEmpty() ? "/" : config.DefaultRemoteDirectory);
             
             NavigationManager.NavigateTo("/browse");
         }

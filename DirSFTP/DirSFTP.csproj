@@ -32,11 +32,48 @@
         <Company>Glitched Polygons</Company>
         <AssemblyVersion>0.9.0</AssemblyVersion>
         <FileVersion>0.9.0</FileVersion>
+        <DefaultLanguage>en-us</DefaultLanguage>
+    </PropertyGroup>
+
+    <PropertyGroup Condition="'$(Configuration)|$(TargetFramework)|$(Platform)'=='Debug|net6.0-android|AnyCPU'">
+      <ApplicationId>com.glitchedpolygons.dirsftp</ApplicationId>
+    </PropertyGroup>
+
+    <PropertyGroup Condition="'$(Configuration)|$(TargetFramework)|$(Platform)'=='Release|net6.0-android|AnyCPU'">
+      <ApplicationId>com.glitchedpolygons.dirsftp</ApplicationId>
+    </PropertyGroup>
+
+    <PropertyGroup Condition="'$(Configuration)|$(TargetFramework)|$(Platform)'=='Debug|net6.0-ios|AnyCPU'">
+      <ApplicationId>com.glitchedpolygons.dirsftp</ApplicationId>
+    </PropertyGroup>
+
+    <PropertyGroup Condition="'$(Configuration)|$(TargetFramework)|$(Platform)'=='Release|net6.0-ios|AnyCPU'">
+      <ApplicationId>com.glitchedpolygons.dirsftp</ApplicationId>
+    </PropertyGroup>
+
+    <PropertyGroup Condition="'$(Configuration)|$(TargetFramework)|$(Platform)'=='Debug|net6.0-maccatalyst|AnyCPU'">
+      <ApplicationId>com.glitchedpolygons.dirsftp</ApplicationId>
+    </PropertyGroup>
+
+    <PropertyGroup Condition="'$(Configuration)|$(TargetFramework)|$(Platform)'=='Release|net6.0-maccatalyst|AnyCPU'">
+      <ApplicationId>com.glitchedpolygons.dirsftp</ApplicationId>
+    </PropertyGroup>
+
+    <PropertyGroup Condition="'$(Configuration)|$(TargetFramework)|$(Platform)'=='Debug|net6.0-windows10.0.19041.0|AnyCPU'">
+      <ApplicationId>com.glitchedpolygons.dirsftp</ApplicationId>
+    </PropertyGroup>
+
+    <PropertyGroup Condition="'$(Configuration)|$(TargetFramework)|$(Platform)'=='Release|net6.0-windows10.0.19041.0|AnyCPU'">
+      <ApplicationId>com.glitchedpolygons.dirsftp</ApplicationId>
     </PropertyGroup>
 
     <ItemGroup>
+		<!-- App icon for Windows -->
+		<MauiIcon Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'android'" Include="Resources\AppIcon\appicon_android.png" ForegroundFile="Resources\AppIcon\appicon_android.png" />
+		
         <!-- App Icon -->
-        <MauiIcon Include="Resources\AppIcon\appicon.svg" ForegroundFile="Resources\AppIcon\appiconfg.svg" Color="#512BD4" />
+        <MauiIcon Include="Resources\AppIcon\appicon.png" />
+        <MauiIcon Include="Resources\AppIcon\appicon.png" ForegroundFile="Resources\AppIcon\appiconfg.png" Color="#512BD4" />
 
         <!-- Splash Screen -->
         <MauiSplashScreen Include="Resources\Splash\splash.svg" Color="#512BD4" BaseSize="128,128" />
@@ -50,6 +87,10 @@
 
         <!-- Raw Assets (also remove the "Resources\Raw" prefix) -->
         <MauiAsset Include="Resources\Raw\**" LogicalName="%(RecursiveDir)%(Filename)%(Extension)" />
+    </ItemGroup>
+
+    <ItemGroup>
+      <None Remove="Resources\AppIcon\appicon.png" />
     </ItemGroup>
 
     <ItemGroup>

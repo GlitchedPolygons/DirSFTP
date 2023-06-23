@@ -26,4 +26,16 @@ public partial class App : Application
         
         MainPage = new MainPage();
     }
+
+    protected override Window CreateWindow(IActivationState activationState)
+    {
+        Microsoft.Maui.Controls.Window window = base.CreateWindow(activationState);
+
+        if (window != null)
+        {
+            window.Title = "DirSFTP - Your favorite cross-platform, open-source SFTP client";
+        }
+
+        return window;
+    }
 }
