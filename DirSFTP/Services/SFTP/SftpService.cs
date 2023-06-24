@@ -89,18 +89,18 @@ public class SftpService : ISftpService
         }
     }
 
-    public bool DirectoryExists(string remoteDirectory)
+    public bool Exists(string remotePath)
     {
         using SftpClient client = Create();
 
         try
         {
             client.Connect();
-            return client.Exists(remoteDirectory);
+            return client.Exists(remotePath);
         }
         catch (Exception exception)
         {
-            logger?.LogError(exception, "{Class}::{Method}: Directory existence check failed for [{RemoteDirectory}]", nameof(SftpService), nameof(DirectoryExists), remoteDirectory);
+            logger?.LogError(exception, "{Class}::{Method}: Directory existence check failed for [{RemoteDirectory}]", nameof(SftpService), nameof(Exists), remotePath);
             return false;
         }
         finally
@@ -109,7 +109,7 @@ public class SftpService : ISftpService
         }
     }
 
-    public IEnumerable<SftpFile> ListAllFiles(string remoteDirectory = ".")
+    public IEnumerable<SftpFile> ListAll(string remoteDirectory = ".")
     {
         using SftpClient client = Create();
 
@@ -120,8 +120,29 @@ public class SftpService : ISftpService
         }
         catch (Exception exception)
         {
-            logger?.LogError(exception, "{Class}::{Method}: Failed listing files inside [{RemoteDirectory}]", nameof(SftpService), nameof(ListAllFiles), remoteDirectory);
+            logger?.LogError(exception, "{Class}::{Method}: Failed listing files inside [{RemoteDirectory}]", nameof(SftpService), nameof(ListAll), remoteDirectory);
             return Array.Empty<SftpFile>();
+        }
+        finally
+        {
+            client.Disconnect();
+        }
+    }
+
+    public bool CreateDirectory(string remoteDirectory)
+    {
+        using SftpClient client = Create();
+
+        try
+        {
+            client.Connect();
+            client.CreateDirectory(remoteDirectory);
+            return true;
+        }
+        catch (Exception exception)
+        {
+            logger?.LogError(exception, "{Class}::{Method}: Failed creating directory [{RemoteDirectory}]", nameof(SftpService), nameof(CreateDirectory), remoteDirectory);
+            return false;
         }
         finally
         {
@@ -171,20 +192,55 @@ public class SftpService : ISftpService
         }
     }
 
-    public bool DeleteFile(string remoteFilePath)
+    public bool Delete(SftpFile file)
+    {
+        if (file is null)
+        {
+            return false;
+        }
+
+        using SftpClient client = Create();
+
+        try
+        {
+            client.Connect();
+
+            client.Delete(file.FullName);
+
+            logger?.LogInformation("{Class}::{Method}: File [{RemoteFilePath}] has been deleted", nameof(SftpService), nameof(Delete), file.FullName);
+
+            return true;
+        }
+        catch (Exception exception)
+        {
+            logger?.LogError(exception, "{Class}::{Method}: Failed deleting the file [{RemoteFilePath}]", nameof(SftpService), nameof(Delete), file.FullName);
+
+            return false;
+        }
+        finally
+        {
+            client.Disconnect();
+        }
+    }
+
+    public bool Rename(string remotePath, string newRemotePath)
     {
         using SftpClient client = Create();
 
         try
         {
             client.Connect();
-            client.DeleteFile(remoteFilePath);
-            logger?.LogInformation("{Class}::{Method}: File [{RemoteFilePath}] has been deleted", nameof(SftpService), nameof(DeleteFile), remoteFilePath);
+
+            client.RenameFile(remotePath, newRemotePath);
+
+            logger?.LogInformation("{Class}::{Method}: Finished renaming [{RemotePath}] to [{NewRemotePath}]", nameof(SftpService), nameof(Rename), remotePath, newRemotePath);
+
             return true;
         }
         catch (Exception exception)
         {
-            logger?.LogError(exception, "{Class}::{Method}: Failed deleting the file [{RemoteFilePath}]", nameof(SftpService), nameof(DeleteFile), remoteFilePath);
+            logger?.LogError(exception, "{Class}::{Method}: Failed renaming [{RemotePath}] to [{NewRemotePath}]", nameof(SftpService), nameof(DownloadFile), remotePath, newRemotePath);
+
             return false;
         }
         finally

@@ -148,20 +148,23 @@ else
             <tr>
 
                 <td>
-                    <span class="oi oi-trash"
-                          title="Delete"
-                          @onclick="() => OnClickDelete(file)">
-                    </span>
+                    @if (file.Name != "..")
+                    {
+                        <span class="oi oi-trash"
+                              title="Delete"
+                              @onclick="() => OnClickDelete(file)">
+                        </span>
 
-                    <span class="oi oi-pencil"
-                          title="Rename"
-                          @onclick="() => OnClickRename(file)">
-                    </span>
+                        <span class="oi oi-pencil"
+                              title="Rename"
+                              @onclick="() => OnClickRename(file)">
+                        </span>
 
-                    <span class="oi oi-shield"
-                          title="Set permissions"
-                          @onclick="() => OnClickSetPermissions(file)">
-                    </span>
+                        <span class="oi oi-shield"
+                              title="Set permissions"
+                              @onclick="() => OnClickSetPermissions(file)">
+                        </span>
+                    }
                 </td>
 
                 <td title="@file.FullName">
@@ -169,7 +172,7 @@ else
                     <a href="javascript:void(0)"
                        class="underline-on-hover"
                        @onclick="() => OnClickFile(file)">
-                          @file.Name@(file.IsDirectory ? "/" : "")
+                        @file.Name@(file.IsDirectory ? "/" : "")
                     </a>
 
                 </td>
@@ -201,12 +204,18 @@ else
 
     </table>
 
-    <br />
-
     <button @onclick="OnClickUpload"
-            class="btn btn-primary mt-1">
+            class="btn btn-primary mt-4 stretch-when-narrow">
         Upload
     </button>
+
+    <span style="margin-left: 8px; margin-right: 8px;"></span>
+
+    <button @onclick="OnClickCreateDirectory"
+            class="btn btn-primary mt-4 stretch-when-narrow">
+        Create directory
+    </button>
+
 
     <br />
     <br />
@@ -296,7 +305,6 @@ else
         }
         else if (file.IsRegularFile)
         {
-
             // TODO
         }
         else
@@ -332,19 +340,19 @@ else
             remoteDirectory = remoteDirectory.Replace('\\', '/');
         }
 
-        if (!sftpService.DirectoryExists(remoteDirectory))
+        if (!sftpService.Exists(remoteDirectory))
         {
             if (Application.Current?.MainPage is not null)
             {
                 if (await Application.Current.MainPage.DisplayAlert("Directory access failed", $"The directory \"{remoteDirectory}\" couldn't be accessed. How do you want to proceed?", "Return to default directory", "Cancel (stay in current directory)"))
                 {
-                    if (sftpService.DirectoryExists(currentSftpConfig.DefaultRemoteDirectory))
+                    if (sftpService.Exists(currentSftpConfig.DefaultRemoteDirectory))
                     {
                         await OpenDirectory(currentSftpConfig.DefaultRemoteDirectory);
                         return;
                     }
 
-                    if (sftpService.DirectoryExists("."))
+                    if (sftpService.Exists("."))
                     {
                         await OpenDirectory(".");
                         return;
@@ -356,7 +364,7 @@ else
 
         currentDirectory = remoteDirectory;
 
-        files = sftpService.ListAllFiles(currentDirectory);
+        files = sftpService.ListAll(currentDirectory);
 
         await SecureStorage.SetAsync(Constants.PreferenceIds.LAST_DIRECTORY, currentDirectory);
     }
@@ -365,23 +373,97 @@ else
     {
         IEnumerable<FileResult> files = await FilePicker.Default.PickMultipleAsync(PickOptions.Default);
 
+        // TODO: handle file collisions
+
+        foreach(FileResult file in files)
+        {
+            if (Directory.Exists(file.FullPath)) // Uploading entire directories is not yet supported.
+            {
+                continue;
+            }
+
+            //Stream fileStream = await file.OpenReadAsync();
+
+            sftpService.UploadFile(file.FullPath, $"{currentDirectory.TrimEnd('/').TrimEnd('\\')}/{file.FileName}");
+        }
+
+        await OpenDirectory(currentDirectory);
         // TODO: implement file upload here (+ drag & drop too!)
     }
 
-    private void OnClickRename(SftpFile file)
+    private async Task OnClickCreateDirectory()
     {
-        if (file is null || sftpService is null)
+        if (sftpService is null || Application.Current?.MainPage is null)
         {
             return;
         }
 
+        string directoryName = await Application.Current.MainPage.DisplayPromptAsync("Enter new directory name", "Enter name for the new directory", "Create", "Cancel", keyboard: Keyboard.Text);
 
-        // TODO: implement file and directory renaming here (with a dialog prompt - use DisplayPromptAsync to do it easily)
+        directoryName = $"{currentDirectory.TrimEnd('/').TrimEnd('\\')}/{directoryName}";
+
+        bool success = sftpService.CreateDirectory(directoryName);
+
+        if (success)
+        {
+            await OpenDirectory(directoryName);
+        }
+        else
+        {
+            await Application.Current.MainPage.DisplayAlert("Directory creation failed", $"Failed to create directory \"{directoryName}\" - perhaps double-check permissions?", "OK");
+        }
+    }
+
+    private async Task OnClickRename(SftpFile file)
+    {
+        if (file is null || sftpService is null || Application.Current?.MainPage is null)
+        {
+            return;
+        }
+
+        string objectType = (file.IsDirectory ? "directory" : "file");
+
+        string newName = await Application.Current.MainPage.DisplayPromptAsync($"Enter new {objectType} name", $"Enter new name for \"{file.FullName}\"", "Rename", "Cancel", keyboard: Keyboard.Text);
+
+        string newRemotePath = $"{currentDirectory.TrimEnd('/').TrimEnd('\\')}/{newName}";
+
+        if (sftpService.Exists(newRemotePath))
+        {
+            await Application.Current.MainPage.DisplayAlert($"Renaming {objectType} \"{file.Name}\" failed", $"Failed to rename {objectType} \"{file.Name}\" because there already is a {objectType} with that name under \"{currentDirectory}\"", "OK");
+            return;
+        }
+
+        if (file.IsRegularFile)
+        {
+            string ext = Path.GetExtension(file.FullName);
+            string newExt = Path.GetExtension(newName);
+
+            if (!ext.Equals(newExt, StringComparison.InvariantCultureIgnoreCase) && !await Application.Current.MainPage.DisplayAlert("File extension mismatch", "You entered a new name whose file extension does not match the previous one. Are you sure that that's you want?", "Proceed", "Cancel"))
+            {
+                return;
+            }
+
+            if (newExt.NullOrEmpty() && !await Application.Current.MainPage.DisplayAlert("File extension?", "You entered a name without a file extension. Are you sure that that's you want?", "Proceed", "Cancel"))
+            {
+                return;
+            }
+        }
+
+        bool success = sftpService.Rename(file.FullName, newRemotePath);
+
+        if (success)
+        {
+            await OpenDirectory(currentDirectory);
+        }
+        else
+        {
+            await Application.Current.MainPage.DisplayAlert($"Renaming {objectType} \"{file.Name}\" failed", $"Failed to rename {objectType} \"{file.Name}\" - perhaps double-check permissions?", "OK");
+        }
     }
 
     private void OnClickSetPermissions(SftpFile file)
     {
-        // TODO: implement chmod here (but expect nothing...)
+    // TODO: implement chmod here (but expect nothing...)
     }
 
     private async Task OnClickDelete(SftpFile file)
@@ -398,7 +480,7 @@ else
             return;
         }
 
-        if (!sftpService.DeleteFile(file.FullName))
+        if (!sftpService.Delete(file))
         {
             await Application.Current.MainPage.DisplayAlert("Deletion failed", $"Deleting {file.FullName} failed. Perhaps double-check permissions?", "OK");
             return;

@@ -153,20 +153,17 @@ https://github.com/dotnet/maui/issues/15817
            @bind="remoteDirectory" />
 </div>
 
-<div class="form-group mt-4 connection-editor-form-group"
-     style="padding-bottom: 8px;">
+<button class="btn btn-secondary mt-4 stretch-when-narrow"
+        @onclick="OnClickCancel">
+    Cancel
+</button>
 
-    <button class="btn btn-secondary stretch-when-narrow"
-            @onclick="OnClickCancel">
-        Cancel
-    </button>
+<span style="margin-left: 8px; margin-right: 8px;"></span>
 
-    <button class="btn btn-primary stretch-when-narrow"
-            @onclick="OnClickSave">
-        Save
-    </button>
-
-</div> 
+<button class="btn btn-primary mt-4 stretch-when-narrow"
+        @onclick="OnClickSave">
+    Save
+</button>
 
 <br />
 <br />
@@ -186,7 +183,7 @@ https://github.com/dotnet/maui/issues/15817
     private string privateKeyPassphrase = string.Empty;
     private string remoteDirectory = string.Empty;
 
-        private const string PRIVATE_KEY_TOOLTIP = @"
+    private const string PRIVATE_KEY_TOOLTIP = @"
 
 PEM-formatted private key. The following key types are supported:
 

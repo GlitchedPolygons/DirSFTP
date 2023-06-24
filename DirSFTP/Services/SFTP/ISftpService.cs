@@ -23,9 +23,11 @@ namespace GlitchedPolygons.DirSFTP.Services.SFTP;
 public interface ISftpService
 {
     bool StillConnected { get; }
-    bool DirectoryExists(string remoteDirectory);
-    IEnumerable<SftpFile> ListAllFiles(string remoteDirectory = ".");
+    bool Exists(string remotePath);
+    IEnumerable<SftpFile> ListAll(string remoteDirectory = ".");
+    bool CreateDirectory(string remoteDirectory);
     void UploadFile(string localFilePath, string remoteFilePath);
     void DownloadFile(string remoteFilePath, string localFilePath);
-    bool DeleteFile(string remoteFilePath);
+    bool Rename(string remotePath, string newRemotePath);
+    bool Delete(SftpFile file);
 }
