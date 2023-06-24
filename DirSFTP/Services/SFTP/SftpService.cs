@@ -171,7 +171,7 @@ public class SftpService : ISftpService
         }
     }
 
-    public void DeleteFile(string remoteFilePath)
+    public bool DeleteFile(string remoteFilePath)
     {
         using SftpClient client = Create();
 
@@ -180,10 +180,12 @@ public class SftpService : ISftpService
             client.Connect();
             client.DeleteFile(remoteFilePath);
             logger?.LogInformation("{Class}::{Method}: File [{RemoteFilePath}] has been deleted", nameof(SftpService), nameof(DeleteFile), remoteFilePath);
+            return true;
         }
         catch (Exception exception)
         {
             logger?.LogError(exception, "{Class}::{Method}: Failed deleting the file [{RemoteFilePath}]", nameof(SftpService), nameof(DeleteFile), remoteFilePath);
+            return false;
         }
         finally
         {

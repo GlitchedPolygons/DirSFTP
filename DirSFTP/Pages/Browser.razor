@@ -296,6 +296,7 @@ else
         }
         else if (file.IsRegularFile)
         {
+
             // TODO
         }
         else
@@ -360,13 +361,21 @@ else
         await SecureStorage.SetAsync(Constants.PreferenceIds.LAST_DIRECTORY, currentDirectory);
     }
 
-    private void OnClickUpload()
+    private async Task OnClickUpload()
     {
+        IEnumerable<FileResult> files = await FilePicker.Default.PickMultipleAsync(PickOptions.Default);
+
         // TODO: implement file upload here (+ drag & drop too!)
     }
 
     private void OnClickRename(SftpFile file)
     {
+        if (file is null || sftpService is null)
+        {
+            return;
+        }
+
+
         // TODO: implement file and directory renaming here (with a dialog prompt - use DisplayPromptAsync to do it easily)
     }
 
@@ -375,8 +384,26 @@ else
         // TODO: implement chmod here (but expect nothing...)
     }
 
-    private void OnClickDelete(SftpFile file)
+    private async Task OnClickDelete(SftpFile file)
     {
-        // TODO: implement file deletion here (with a dialog prompt "Are you sure?")
+        if (file is null || sftpService is null || Application.Current?.MainPage is null)
+        {
+            return;
+        }
+
+        string prompt = (file.IsDirectory ? $"directory \"{file.FullName}\" and all its files and sub-folders" : $"file \"{file.Name}\"");
+
+        if (!await Application.Current.MainPage.DisplayAlert("Are you sure?", $"Do you really want to delete the {prompt}?", "Yes, delete", "No, keep"))
+        {
+            return;
+        }
+
+        if (!sftpService.DeleteFile(file.FullName))
+        {
+            await Application.Current.MainPage.DisplayAlert("Deletion failed", $"Deleting {file.FullName} failed. Perhaps double-check permissions?", "OK");
+            return;
+        }
+
+        await OpenDirectory(currentDirectory);
     }
 }
