@@ -516,12 +516,17 @@ else
 
     private async Task OnClickCreateDirectory()
     {
-        if (sftpService is null || Application.Current?.MainPage is null)
+        if (sftpService is null || Application.Current?.MainPage is null || busy)
         {
             return;
         }
 
         string directoryName = await Application.Current.MainPage.DisplayPromptAsync("Enter new directory name", "Enter name for the new directory\n", "Create", "Cancel", keyboard: Keyboard.Text);
+
+        if (directoryName.NullOrEmpty())
+        {
+            return;
+        }
 
         directoryName = $"{currentDirectory.TrimEnd('/').TrimEnd('\\')}/{directoryName}";
 
