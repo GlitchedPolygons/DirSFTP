@@ -210,6 +210,7 @@ public class SftpService : ISftpService
             if (file.IsDirectory)
             {
                 Stack<SftpFile> stack = new();
+
                 IList<string> filePaths = new List<string>();
                 IList<string> subdirectories = new List<string>();
 
@@ -217,26 +218,26 @@ public class SftpService : ISftpService
 
                 while(stack.Count != 0)
                 {
-                    SftpFile i = stack.Pop();
+                    SftpFile entry = stack.Pop();
 
-                    if (i.IsDirectory)
+                    if (entry.IsDirectory)
                     {
-                        foreach(SftpFile f in client.ListDirectory(i.FullName).Where(s => s.Name != "." && s.Name != ".."))
+                        foreach(SftpFile subEntry in client.ListDirectory(entry.FullName).Where(s => s.Name != "." && s.Name != ".."))
                         {
-                            if (f.IsDirectory)
+                            if (subEntry.IsDirectory)
                             {
-                                stack.Push(f);
-                                subdirectories.Add(f.FullName);
+                                stack.Push(subEntry);
+                                subdirectories.Add(subEntry.FullName);
                             }
                             else
                             {
-                                filePaths.Add(f.FullName);
+                                filePaths.Add(subEntry.FullName);
                             }
                         }
                     }
                     else
                     {
-                        filePaths.Add(i.FullName);
+                        filePaths.Add(entry.FullName);
                     }
                 }
 
