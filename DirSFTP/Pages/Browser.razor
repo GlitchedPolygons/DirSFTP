@@ -232,7 +232,7 @@ else
         @foreach (var kvp in uploadProgress)
         {
             <p>
-                @kvp.Key
+                @kvp.Key (@kvp.Value.Item1.ToFileSizeString() / @kvp.Value.Item2.ToFileSizeString())
             </p>
 
             <div class="progress">
@@ -248,7 +248,6 @@ else
             <br />
         }
     }
-    
 
     <br />
     <br />
@@ -459,11 +458,20 @@ else
             }
         }
 
-        bool overwriteExistingFiles = await Application.Current.MainPage.DisplayAlert("File name collisions", "One or more files that you selected have a file name that is already present in the remote directory.\n\nHow do you want to handle these file name collisions?", cancel: "Skip", accept: "Overwrite");
-
-        if (fileNameCollisions.NotNullNotEmpty() && !overwriteExistingFiles)
+        if (fileNameCollisions.NotNullNotEmpty())
         {
-            files = files.Where(file => !fileNameCollisions.Contains(file.FileName));
+            bool overwriteExistingFiles = await Application.Current.MainPage.DisplayAlert("File name collisions", "One or more files that you selected have a file name that is already present in the remote directory.\n\nHow do you want to handle these file name collisions?", cancel: "Skip", accept: "Overwrite");
+
+            if (!overwriteExistingFiles)
+            {
+                files = files.Where(file => !fileNameCollisions.Contains(file.FileName));
+            }
+        }
+
+        if (!files.Any())
+        {
+            busy = false;
+            return;
         }
 
         uploadProgress.Clear();
@@ -483,7 +491,7 @@ else
 
             uploadProgress[file.FileName] = (0, fileSizeBytes);
 
-            Task uploadTask = sftpService.UploadFileAsync(file.FullPath, $"{currentDirectory.TrimEnd('/').TrimEnd('\\')}/{file.FileName}", overwriteExistingFiles, (ulong progress) =>
+            Task uploadTask = sftpService.UploadFileAsync(file.FullPath, $"{currentDirectory.TrimEnd('/').TrimEnd('\\')}/{file.FileName}", true, (ulong progress) =>
             {
                 (ulong, ulong) uploadProgressTuple = uploadProgress[file.FileName];
 
