@@ -192,6 +192,45 @@ public class SftpService : ISftpService
         }
     }
 
+    private void ListRecursively(SftpClient client, SftpFile file, IList<string> filePaths, IList<string> subdirectoryPaths)
+    {
+        if (!file.IsDirectory)
+        {
+            filePaths.Add(file.FullName);
+
+            return;
+        }
+        
+        Stack<SftpFile> stack = new();
+
+        stack.Push(file);
+
+        while (stack.Count != 0)
+        {
+            SftpFile entry = stack.Pop();
+
+            if (entry.IsDirectory)
+            {
+                foreach (SftpFile subEntry in client.ListDirectory(entry.FullName).Where(s => s.Name != "." && s.Name != ".."))
+                {
+                    if (subEntry.IsDirectory)
+                    {
+                        stack.Push(subEntry);
+                        subdirectoryPaths.Add(subEntry.FullName);
+                    }
+                    else
+                    {
+                        filePaths.Add(subEntry.FullName);
+                    }
+                }
+            }
+            else
+            {
+                filePaths.Add(entry.FullName);
+            }
+        }
+    }
+
     public bool Delete(SftpFile file)
     {
         if (file is null)
@@ -212,34 +251,9 @@ public class SftpService : ISftpService
                 Stack<SftpFile> stack = new();
 
                 IList<string> filePaths = new List<string>();
-                IList<string> subdirectories = new List<string>();
+                IList<string> subdirectoryPaths = new List<string>();
 
-                stack.Push(file);
-
-                while(stack.Count != 0)
-                {
-                    SftpFile entry = stack.Pop();
-
-                    if (entry.IsDirectory)
-                    {
-                        foreach(SftpFile subEntry in client.ListDirectory(entry.FullName).Where(s => s.Name != "." && s.Name != ".."))
-                        {
-                            if (subEntry.IsDirectory)
-                            {
-                                stack.Push(subEntry);
-                                subdirectories.Add(subEntry.FullName);
-                            }
-                            else
-                            {
-                                filePaths.Add(subEntry.FullName);
-                            }
-                        }
-                    }
-                    else
-                    {
-                        filePaths.Add(entry.FullName);
-                    }
-                }
+                ListRecursively(client, file, filePaths, subdirectoryPaths);
 
                 foreach(string filePath in filePaths)
                 {
@@ -253,7 +267,7 @@ public class SftpService : ISftpService
                     }
                 }
 
-                foreach(string subdirectory in subdirectories.Reverse())
+                foreach(string subdirectory in subdirectoryPaths.Reverse())
                 {
                     try
                     {
@@ -304,7 +318,78 @@ public class SftpService : ISftpService
         }
         catch (Exception exception)
         {
-            logger?.LogError(exception, "{Class}::{Method}: Failed renaming [{RemotePath}] to [{NewRemotePath}]", nameof(SftpService), nameof(DownloadFile), remotePath, newRemotePath);
+            logger?.LogError(exception, "{Class}::{Method}: Failed renaming [{RemotePath}] to [{NewRemotePath}]", nameof(SftpService), nameof(Rename), remotePath, newRemotePath);
+
+            return false;
+        }
+        finally
+        {
+            client.Disconnect();
+        }
+    }
+
+    public bool ChangePermissions(string remotePath, short newPermissions, bool recursively = false)
+    {
+        using SftpClient client = Create();
+
+        bool flawlessExecution = true;
+
+        try
+        {
+            client.Connect();
+
+            SftpFile file = client.Get(remotePath);
+
+            if (file is null)
+            {
+                return false;
+            }
+
+            if (file.IsDirectory && recursively)
+            {
+                IList<string> filePaths = new List<string>();
+                IList<string> subdirectoryPaths = new List<string>();
+
+                ListRecursively(client, file, filePaths, subdirectoryPaths);
+
+                foreach (string filePath in filePaths)
+                {
+                    try
+                    {
+                        client.ChangePermissions(filePath, newPermissions);
+                    }
+                    catch
+                    {
+                        flawlessExecution = false;
+                    }
+                }
+
+                foreach (string subdirectory in subdirectoryPaths.Reverse())
+                {
+                    try
+                    {
+                        client.ChangePermissions(subdirectory, newPermissions);
+                    }
+                    catch
+                    {
+                        flawlessExecution = false;
+                    }
+                }
+
+                client.ChangePermissions(remotePath, newPermissions);
+            }
+            else
+            {
+                client.ChangePermissions(remotePath, newPermissions);
+            }
+
+            logger?.LogInformation("{Class}::{Method}: Finished changing permissions {Recursivity}[{RemotePath}] to [{NewPermissions}]", nameof(SftpService), nameof(ChangePermissions), recursively ? "recursively in " : "in", remotePath, newPermissions);
+
+            return flawlessExecution;
+        }
+        catch (Exception exception)
+        {
+            logger?.LogError(exception, "{Class}::{Method}: Failed changing permissions {Recursivity}[{RemotePath}] to [{NewPermissions}]", nameof(SftpService), nameof(ChangePermissions), recursively ? "recursively in " : "in", remotePath, newPermissions);
 
             return false;
         }

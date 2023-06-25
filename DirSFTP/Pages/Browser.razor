@@ -364,7 +364,7 @@ else
 
         currentDirectory = remoteDirectory;
 
-        files = sftpService.ListAll(currentDirectory);
+        files = sftpService.ListAll(currentDirectory).OrderByDescending(f => f.Name == "..").ThenBy(f => f.Name);
 
         await SecureStorage.SetAsync(Constants.PreferenceIds.LAST_DIRECTORY, currentDirectory);
     }
@@ -463,15 +463,42 @@ else
 
     private async Task OnClickSetPermissions(SftpFile file)
     {
-        string chmod = await Application.Current.MainPage.DisplayPromptAsync("Enter new permission octal", "Enter the new permission set in octal notation (as if you were running \"chmod\" on a *nix server).\n\nE.g. 640, 760, etc...\n", "Save", "Cancel", keyboard: Keyboard.Numeric);
-
-        if (chmod is null || chmod.Length != 3)
+        if (file is null || sftpService is null || Application.Current?.MainPage is null)
         {
-            await Application.Current.MainPage.DisplayAlert("Invalid permission octal", $"The value {chmod} is not a valid Unix permission octal.\n\nPlease enter a valid value such as 640, 760, etc...\n\nRefer to https://chmod-calculator.com for a simple, learning-by-doing overview of what values are valid here.\n", "OK");
             return;
         }
 
-        // TODO: implement chmod here (but expect nothing...)
+        string chmodString = await Application.Current.MainPage.DisplayPromptAsync("Enter new permission octal", "Enter the new permission set in octal notation (as if you were running \"chmod\" on a *nix server).\n\nE.g. 640, 760, etc...\n", "Save", "Cancel", keyboard: Keyboard.Numeric);
+
+        if (chmodString is null || chmodString.Length != 3 || !short.TryParse(chmodString, out short chmod))
+        {
+            await Application.Current.MainPage.DisplayAlert("Invalid permission octal", $"The value {chmodString} is not a valid Unix permission octal.\n\nPlease enter a valid value such as 640, 760, etc...\n\nRefer to https://chmod-calculator.com for a simple, learning-by-doing overview of what values are valid here.\n", "OK");
+            return;
+        }
+
+        switch(chmod)
+        {
+            case >= 0 and <= 777:
+            {
+                break;
+            }
+            default:
+            {
+                await Application.Current.MainPage.DisplayAlert("Invalid permission octal", $"The value {chmodString} is not a valid Unix permission octal.\n\nPlease enter a valid value such as 640, 760, etc...\n\nRefer to https://chmod-calculator.com for a simple, learning-by-doing overview of what values are valid here.\n", "OK");
+                return;
+            }
+        }
+
+        bool recursively = file.IsDirectory && await Application.Current.MainPage.DisplayAlert("Change directory permissions", $"You're changing permissions for \"{file.FullName}\", which is a directory. Do you want to set the permissions recursively in every subdirectory and files as well, or only this specific directory?\n", "Recursively", "Only this one");
+
+        bool success = sftpService.ChangePermissions(file.FullName, chmod, recursively);
+
+        if (!success)
+        {
+            await Application.Current.MainPage.DisplayAlert("chmod result", $"One or more files/subdirectories could not be \"chmodded\" into the permissions octal {chmod}", "OK");
+        }
+
+        await OpenDirectory(currentDirectory);
     }
 
     private async Task OnClickDelete(SftpFile file)

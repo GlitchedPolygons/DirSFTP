@@ -29,5 +29,6 @@ public interface ISftpService
     void UploadFile(string localFilePath, string remoteFilePath);
     void DownloadFile(string remoteFilePath, string localFilePath);
     bool Rename(string remotePath, string newRemotePath);
+    bool ChangePermissions(string remotePath, short newPermissions, bool recursively = false);
     bool Delete(SftpFile file);
 }
