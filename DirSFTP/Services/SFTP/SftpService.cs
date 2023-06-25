@@ -21,6 +21,7 @@ using Renci.SshNet.Sftp;
 using Microsoft.Extensions.Logging;
 using GlitchedPolygons.DirSFTP.Models;
 using GlitchedPolygons.ExtensionMethods;
+using GlitchedPolygons.DirSFTP.ExtensionMethods;
 
 namespace GlitchedPolygons.DirSFTP.Services.SFTP;
 
@@ -40,7 +41,7 @@ public class SftpService : ISftpService
         }
     }
 
-    private SftpClient Create()
+    private SftpClient CreateClient()
     {
         if (config.PrivateKey.NotNullNotEmpty())
         {
@@ -70,7 +71,7 @@ public class SftpService : ISftpService
     {
         get
         {
-            using SftpClient client = Create();
+            using SftpClient client = CreateClient();
 
             try
             {
@@ -91,7 +92,7 @@ public class SftpService : ISftpService
 
     public bool Exists(string remotePath)
     {
-        using SftpClient client = Create();
+        using SftpClient client = CreateClient();
 
         try
         {
@@ -111,7 +112,7 @@ public class SftpService : ISftpService
 
     public IEnumerable<SftpFile> ListAll(string remoteDirectory = ".")
     {
-        using SftpClient client = Create();
+        using SftpClient client = CreateClient();
 
         try
         {
@@ -129,9 +130,29 @@ public class SftpService : ISftpService
         }
     }
 
+    public async Task<IEnumerable<SftpFile>> ListAllAsync(string remoteDirectory = ".")
+    {
+        using SftpClient client = CreateClient();
+
+        try
+        {
+            client.Connect();
+            return await client.ListDirectoryAsync(remoteDirectory);
+        }
+        catch (Exception exception)
+        {
+            logger?.LogError(exception, "{Class}::{Method}: Failed listing files inside [{RemoteDirectory}]", nameof(SftpService), nameof(ListAllAsync), remoteDirectory);
+            return Array.Empty<SftpFile>();
+        }
+        finally
+        {
+            client.Disconnect();
+        }
+    }
+
     public bool CreateDirectory(string remoteDirectory)
     {
-        using SftpClient client = Create();
+        using SftpClient client = CreateClient();
 
         try
         {
@@ -152,7 +173,7 @@ public class SftpService : ISftpService
 
     public void UploadFile(string localFilePath, string remoteFilePath)
     {
-        using SftpClient client = Create();
+        using SftpClient client = CreateClient();
 
         try
         {
@@ -171,9 +192,30 @@ public class SftpService : ISftpService
         }
     }
 
+    public async Task UploadFileAsync(string localFilePath, string remoteFilePath, Action<ulong> uploadCallback = null)
+    {
+        using SftpClient client = CreateClient();
+
+        try
+        {
+            client.Connect();
+            await using FileStream fileStream = File.OpenRead(localFilePath);
+            await client.UploadAsync(fileStream, remoteFilePath, uploadCallback);
+            logger?.LogInformation("{Class}::{Method}: Finished uploading the file [{LocalFilePath}] to [{RemoteFilePath}]", nameof(SftpService), nameof(UploadFileAsync), localFilePath, remoteFilePath);
+        }
+        catch (Exception exception)
+        {
+            logger?.LogError(exception, "{Class}::{Method}: Failed uploading the file [{LocalFilePath}] to [{RemoteFilePath}]", nameof(SftpService), nameof(UploadFileAsync), localFilePath, remoteFilePath);
+        }
+        finally
+        {
+            client.Disconnect();
+        }
+    }
+
     public void DownloadFile(string remoteFilePath, string localFilePath)
     {
-        using SftpClient client = Create();
+        using SftpClient client = CreateClient();
 
         try
         {
@@ -200,7 +242,7 @@ public class SftpService : ISftpService
 
             return;
         }
-        
+
         Stack<SftpFile> stack = new();
 
         stack.Push(file);
@@ -238,7 +280,7 @@ public class SftpService : ISftpService
             return false;
         }
 
-        using SftpClient client = Create();
+        using SftpClient client = CreateClient();
 
         try
         {
@@ -255,7 +297,7 @@ public class SftpService : ISftpService
 
                 ListRecursively(client, file, filePaths, subdirectoryPaths);
 
-                foreach(string filePath in filePaths)
+                foreach (string filePath in filePaths)
                 {
                     try
                     {
@@ -267,7 +309,7 @@ public class SftpService : ISftpService
                     }
                 }
 
-                foreach(string subdirectory in subdirectoryPaths.Reverse())
+                foreach (string subdirectory in subdirectoryPaths.Reverse())
                 {
                     try
                     {
@@ -304,7 +346,7 @@ public class SftpService : ISftpService
 
     public bool Rename(string remotePath, string newRemotePath)
     {
-        using SftpClient client = Create();
+        using SftpClient client = CreateClient();
 
         try
         {
@@ -330,7 +372,7 @@ public class SftpService : ISftpService
 
     public bool ChangePermissions(string remotePath, short newPermissions, bool recursively = false)
     {
-        using SftpClient client = Create();
+        using SftpClient client = CreateClient();
 
         bool flawlessExecution = true;
 

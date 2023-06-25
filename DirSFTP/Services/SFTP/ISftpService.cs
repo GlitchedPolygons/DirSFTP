@@ -25,8 +25,10 @@ public interface ISftpService
     bool StillConnected { get; }
     bool Exists(string remotePath);
     IEnumerable<SftpFile> ListAll(string remoteDirectory = ".");
+    Task<IEnumerable<SftpFile>> ListAllAsync(string remoteDirectory = ".");
     bool CreateDirectory(string remoteDirectory);
     void UploadFile(string localFilePath, string remoteFilePath);
+    Task UploadFileAsync(string localFilePath, string remoteFilePath, Action<ulong> uploadCallback = null);
     void DownloadFile(string remoteFilePath, string localFilePath);
     bool Rename(string remotePath, string newRemotePath);
     bool ChangePermissions(string remotePath, short newPermissions, bool recursively = false);

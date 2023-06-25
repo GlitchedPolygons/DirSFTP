@@ -26,14 +26,15 @@
     DirSFTP - @currentDirectory
 </PageTitle>
 
+@using Renci.SshNet
 @using Renci.SshNet.Sftp
+@using System.Collections.Concurrent;
 @using GlitchedPolygons.DirSFTP.Models
 @using GlitchedPolygons.DirSFTP.Services
 @using GlitchedPolygons.DirSFTP.ExtensionMethods
 @using GlitchedPolygons.DirSFTP.Services.Config
 @using GlitchedPolygons.DirSFTP.Services.SFTP
 @using GlitchedPolygons.ExtensionMethods
-@using Renci.SshNet
 
 <h1>
     SFTP Browser
@@ -66,6 +67,7 @@
         <button class="btn btn-primary"
                 type="button"
                 id="go-btn"
+                disabled="@busy"
                 @onclick="() => OpenDirectory(currentDirectory)">
             Go
         </button>
@@ -205,6 +207,7 @@ else
     </table>
 
     <button @onclick="OnClickUpload"
+            disabled="@busy"
             class="btn btn-primary mt-4 stretch-when-narrow">
         Upload
     </button>
@@ -212,10 +215,42 @@ else
     <span style="margin-left: 8px; margin-right: 8px;"></span>
 
     <button @onclick="OnClickCreateDirectory"
+            disabled="@busy"
             class="btn btn-primary mt-4 stretch-when-narrow">
         Create directory
     </button>
 
+    @if (uploadProgress.NotNullNotEmpty())
+    {
+        <br />
+        <br />
+
+        <p>
+            <strong>Uploads:</strong>
+        </p>
+
+        <br />
+
+        @foreach (var kvp in uploadProgress)
+        {
+            <p>
+                @kvp.Key
+            </p>
+
+            <div class="progress">
+                <div class="progress-bar @((double)(kvp.Value.Item1) / (double)(kvp.Value.Item2) >= 0.999d ? "bg-success" : "progress-bar-striped progress-bar-animated")"
+                     role="progressbar"
+                     aria-valuenow="@kvp.Value.Item1"
+                     aria-valuemin="0"
+                     aria-valuemax="@kvp.Value.Item2"
+                     style="width: @(((double)(kvp.Value.Item1) / (double)(kvp.Value.Item2)) * 100)%;">
+                 </div>
+            </div>
+
+            <br />
+        }
+    }
+    
 
     <br />
     <br />
@@ -223,10 +258,12 @@ else
 
 @code
 {
+    private bool busy = false;
     private string currentDirectory = ".";
     private SftpConfig currentSftpConfig = null;
     private ISftpService sftpService = null;
     private IEnumerable<SftpFile> files = null;
+    private readonly IDictionary<string, (ulong, ulong)> uploadProgress = new ConcurrentDictionary<string, (ulong, ulong)>();
 
     protected override async Task OnInitializedAsync()
     {
@@ -308,8 +345,7 @@ else
             // TODO
         }
         else
-        {
-            // TODO
+        {            // TODO
         }
     }
 
@@ -364,31 +400,80 @@ else
 
         currentDirectory = remoteDirectory;
 
-        files = sftpService.ListAll(currentDirectory).OrderByDescending(f => f.Name == "..").ThenBy(f => f.Name);
+        files = (await sftpService.ListAllAsync(currentDirectory))
+            .OrderByDescending(f => f.Name == "..")
+            .ThenByDescending(f => f.IsDirectory)
+            .ThenBy(f => f.Name);
 
         await SecureStorage.SetAsync(Constants.PreferenceIds.LAST_DIRECTORY, currentDirectory);
     }
 
     private async Task OnClickUpload()
     {
+        if (busy)
+        {
+            return;
+        }
+
+
+        busy = true;
+
         IEnumerable<FileResult> files = await FilePicker.Default.PickMultipleAsync(PickOptions.Default);
 
-        // TODO: handle file collisions
+        // TODO: handle file collisions: check if files with same name are selected (every file name only exactly once allowed!) + also check on remote if file already exists (ask if overwrite)
 
-        foreach(FileResult file in files)
+        if (!files.Any())
+        {
+            busy = false;
+            return;
+        }
+
+        uploadProgress.Clear();
+
+        IList<Task> uploadTasks = new List<Task>();
+
+        foreach (FileResult file in files)
         {
             if (Directory.Exists(file.FullPath)) // Uploading entire directories is not yet supported.
             {
                 continue;
             }
 
-            //Stream fileStream = await file.OpenReadAsync();
+            await using Stream fileStream = await file.OpenReadAsync();
 
-            sftpService.UploadFile(file.FullPath, $"{currentDirectory.TrimEnd('/').TrimEnd('\\')}/{file.FileName}");
+            ulong fileSizeBytes = (ulong)fileStream.Length; // Type-casts from hell, uh oh ;D
+
+            uploadProgress[file.FileName] = (0, fileSizeBytes);
+
+            Task uploadTask = sftpService.UploadFileAsync(file.FullPath, $"{currentDirectory.TrimEnd('/').TrimEnd('\\')}/{file.FileName}", (ulong progress) =>
+            {
+                (ulong, ulong) uploadProgressTuple = uploadProgress[file.FileName];
+
+                uploadProgressTuple.Item1 = progress;
+
+                uploadProgress[file.FileName] = uploadProgressTuple;
+            });
+
+            uploadTasks.Add(uploadTask);
         }
 
+        _ = Task.Run(async () =>
+        {
+            while (uploadTasks.NotNullNotEmpty() && uploadTasks.Any(task => !task.IsCompleted))
+            {
+                await InvokeAsync(StateHasChanged);
+
+                await Task.Delay(256);
+            }
+        });
+
+        await Task.WhenAll(uploadTasks);
+
+        uploadProgress.Clear();
+
+        busy = false;
+
         await OpenDirectory(currentDirectory);
-        // TODO: implement file upload here (+ drag & drop too!)
     }
 
     private async Task OnClickCreateDirectory()
