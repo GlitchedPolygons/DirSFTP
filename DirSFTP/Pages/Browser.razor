@@ -482,7 +482,7 @@ else
 
         if (!sftpService.Delete(file))
         {
-            await Application.Current.MainPage.DisplayAlert("Deletion failed", $"Deleting {file.FullName} failed. Perhaps double-check permissions?", "OK");
+            await Application.Current.MainPage.DisplayAlert("Deletion failed", $"Deleting {(file.IsDirectory ? "one or more files/sub-folders inside " : string.Empty)}{file.FullName} failed. Perhaps double-check permissions?", "OK");
             return;
         }
 

@@ -175,7 +175,7 @@ https://github.com/dotnet/maui/issues/15817
 
     private string host = string.Empty;
     private int? port;
-    private bool savePassword = true;
+    //private bool savePassword = true;
     private bool createNew = true;
     private string username = string.Empty;
     private string password = string.Empty;
@@ -216,7 +216,7 @@ Private keys can be encrypted using one of the following cipher methods:
             createNew = false;
             host = config.Host;
             port = config.Port;
-            savePassword = config.Password.NotNullNotEmpty();
+            //savePassword = config.Password.NotNullNotEmpty();
             username = config.Username ?? string.Empty;
             password = config.Password ?? string.Empty;
             privateKey = config.PrivateKey ?? string.Empty;
@@ -291,7 +291,8 @@ Private keys can be encrypted using one of the following cipher methods:
             Username = username,
             PrivateKey = privateKey,
             PrivateKeyPassphrase = privateKeyPassphrase,
-            Password = savePassword ? password : string.Empty,
+                //Password = savePassword ? password : string.Empty,
+            Password = password ?? string.Empty,
             DefaultRemoteDirectory = remoteDirectory ?? string.Empty
         };
     }

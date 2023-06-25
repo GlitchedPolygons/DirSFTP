@@ -205,11 +205,75 @@ public class SftpService : ISftpService
         {
             client.Connect();
 
-            client.Delete(file.FullName);
+            bool flawlessDeletion = true;
+
+            if (file.IsDirectory)
+            {
+                Stack<SftpFile> stack = new();
+                IList<string> filePaths = new List<string>();
+                IList<string> subdirectories = new List<string>();
+
+                stack.Push(file);
+
+                while(stack.Count != 0)
+                {
+                    SftpFile i = stack.Pop();
+
+                    if (i.IsDirectory)
+                    {
+                        foreach(SftpFile f in client.ListDirectory(i.FullName).Where(s => s.Name != "." && s.Name != ".."))
+                        {
+                            if (f.IsDirectory)
+                            {
+                                stack.Push(f);
+                                subdirectories.Add(f.FullName);
+                            }
+                            else
+                            {
+                                filePaths.Add(f.FullName);
+                            }
+                        }
+                    }
+                    else
+                    {
+                        filePaths.Add(i.FullName);
+                    }
+                }
+
+                foreach(string filePath in filePaths)
+                {
+                    try
+                    {
+                        client.DeleteFile(filePath);
+                    }
+                    catch
+                    {
+                        flawlessDeletion = false;
+                    }
+                }
+
+                foreach(string subdirectory in subdirectories.Reverse())
+                {
+                    try
+                    {
+                        client.DeleteDirectory(subdirectory);
+                    }
+                    catch
+                    {
+                        flawlessDeletion = false;
+                    }
+                }
+
+                client.DeleteDirectory(file.FullName);
+            }
+            else
+            {
+                client.DeleteFile(file.FullName);
+            }
 
             logger?.LogInformation("{Class}::{Method}: File [{RemoteFilePath}] has been deleted", nameof(SftpService), nameof(Delete), file.FullName);
 
-            return true;
+            return flawlessDeletion;
         }
         catch (Exception exception)
         {
