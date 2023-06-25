@@ -76,11 +76,13 @@ public class SftpService : ISftpService
             try
             {
                 client.Connect();
+
                 return client.IsConnected;
             }
             catch (Exception exception)
             {
                 logger?.LogError(exception, "{Class}::{Method}: Connection to host failed", nameof(SftpService), nameof(StillConnected));
+
                 return false;
             }
             finally
@@ -97,11 +99,13 @@ public class SftpService : ISftpService
         try
         {
             client.Connect();
+
             return client.Exists(remotePath);
         }
         catch (Exception exception)
         {
             logger?.LogError(exception, "{Class}::{Method}: Directory existence check failed for [{RemoteDirectory}]", nameof(SftpService), nameof(Exists), remotePath);
+
             return false;
         }
         finally
@@ -117,11 +121,13 @@ public class SftpService : ISftpService
         try
         {
             client.Connect();
+
             return client.ListDirectory(remoteDirectory);
         }
         catch (Exception exception)
         {
             logger?.LogError(exception, "{Class}::{Method}: Failed listing files inside [{RemoteDirectory}]", nameof(SftpService), nameof(ListAll), remoteDirectory);
+
             return Array.Empty<SftpFile>();
         }
         finally
@@ -137,11 +143,13 @@ public class SftpService : ISftpService
         try
         {
             client.Connect();
+
             return await client.ListDirectoryAsync(remoteDirectory);
         }
         catch (Exception exception)
         {
             logger?.LogError(exception, "{Class}::{Method}: Failed listing files inside [{RemoteDirectory}]", nameof(SftpService), nameof(ListAllAsync), remoteDirectory);
+
             return Array.Empty<SftpFile>();
         }
         finally
@@ -157,12 +165,15 @@ public class SftpService : ISftpService
         try
         {
             client.Connect();
+
             client.CreateDirectory(remoteDirectory);
+
             return true;
         }
         catch (Exception exception)
         {
             logger?.LogError(exception, "{Class}::{Method}: Failed creating directory [{RemoteDirectory}]", nameof(SftpService), nameof(CreateDirectory), remoteDirectory);
+
             return false;
         }
         finally
@@ -178,8 +189,11 @@ public class SftpService : ISftpService
         try
         {
             client.Connect();
+
             using FileStream fileStream = File.OpenRead(localFilePath);
+
             client.UploadFile(fileStream, remoteFilePath);
+
             logger?.LogInformation("{Class}::{Method}: Finished uploading the file [{LocalFilePath}] to [{RemoteFilePath}]", nameof(SftpService), nameof(UploadFile), localFilePath, remoteFilePath);
         }
         catch (Exception exception)
@@ -192,15 +206,18 @@ public class SftpService : ISftpService
         }
     }
 
-    public async Task UploadFileAsync(string localFilePath, string remoteFilePath, Action<ulong> uploadCallback = null)
+    public async Task UploadFileAsync(string localFilePath, string remoteFilePath, bool overwriteExistingFiles = false, Action<ulong> uploadCallback = null)
     {
         using SftpClient client = CreateClient();
 
         try
         {
             client.Connect();
+
             await using FileStream fileStream = File.OpenRead(localFilePath);
-            await client.UploadAsync(fileStream, remoteFilePath, uploadCallback);
+
+            await client.UploadAsync(fileStream, remoteFilePath, overwriteExistingFiles, uploadCallback);
+
             logger?.LogInformation("{Class}::{Method}: Finished uploading the file [{LocalFilePath}] to [{RemoteFilePath}]", nameof(SftpService), nameof(UploadFileAsync), localFilePath, remoteFilePath);
         }
         catch (Exception exception)
@@ -220,8 +237,11 @@ public class SftpService : ISftpService
         try
         {
             client.Connect();
+
             using FileStream fileStream = File.Create(localFilePath);
+
             client.DownloadFile(remoteFilePath, fileStream);
+
             logger?.LogInformation("{Class}::{Method}: Finished downloading the file [{LocalFilePath}] from [{RemoteFilePath}]", nameof(SftpService), nameof(DownloadFile), localFilePath, remoteFilePath);
         }
         catch (Exception exception)

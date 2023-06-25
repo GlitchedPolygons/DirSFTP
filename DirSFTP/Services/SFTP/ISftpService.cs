@@ -28,7 +28,7 @@ public interface ISftpService
     Task<IEnumerable<SftpFile>> ListAllAsync(string remoteDirectory = ".");
     bool CreateDirectory(string remoteDirectory);
     void UploadFile(string localFilePath, string remoteFilePath);
-    Task UploadFileAsync(string localFilePath, string remoteFilePath, Action<ulong> uploadCallback = null);
+    Task UploadFileAsync(string localFilePath, string remoteFilePath, bool overwriteExistingFiles = false, Action<ulong> uploadCallback = null);
     void DownloadFile(string remoteFilePath, string localFilePath);
     bool Rename(string remotePath, string newRemotePath);
     bool ChangePermissions(string remotePath, short newPermissions, bool recursively = false);

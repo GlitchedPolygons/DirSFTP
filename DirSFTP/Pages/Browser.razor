@@ -229,8 +229,6 @@ else
             <strong>Uploads:</strong>
         </p>
 
-        <br />
-
         @foreach (var kvp in uploadProgress)
         {
             <p>
@@ -408,6 +406,24 @@ else
         await SecureStorage.SetAsync(Constants.PreferenceIds.LAST_DIRECTORY, currentDirectory);
     }
 
+    private bool HasDuplicateFileNames(IEnumerable<FileResult> files)
+    {
+        return files
+            .GroupBy(file => file.FileName)
+            .All(fileGroup => fileGroup.Count() == 1);
+    }
+
+    private string GetDuplicateFileNames(IEnumerable<FileResult> files)
+    {
+        return files
+            .GroupBy(file => file.FileName)
+            .Where(group => group.Count() > 1)
+            .SelectMany(g => g)
+            .DistinctBy(f => f.FileName)
+            .Select(f => f.FileName)
+            .ToCustomCharSeparatedString('\n');
+    }
+
     private async Task OnClickUpload()
     {
         if (busy)
@@ -420,12 +436,34 @@ else
 
         IEnumerable<FileResult> files = await FilePicker.Default.PickMultipleAsync(PickOptions.Default);
 
-        // TODO: handle file collisions: check if files with same name are selected (every file name only exactly once allowed!) + also check on remote if file already exists (ask if overwrite)
-
         if (!files.Any())
         {
             busy = false;
             return;
+        }
+
+        if (HasDuplicateFileNames(files))
+        {
+            await Application.Current.MainPage.DisplayAlert("Upload failed", $"You selected the following file names more than once:\n\n{GetDuplicateFileNames(files)}\"\n\nDuplicate file names within a single directory are not allowed. Please reselect files with distinct file names.", "OK");
+            busy = false;
+            return;
+        }
+
+        IList<string> fileNameCollisions = new List<string>();
+
+        foreach (SftpFile file in this.files)
+        {
+            if (files.Any(f => f.FileName == file.Name))
+            {
+                fileNameCollisions.Add(file.Name);
+            }
+        }
+
+        bool overwriteExistingFiles = await Application.Current.MainPage.DisplayAlert("File name collisions", "One or more files that you selected have a file name that is already present in the remote directory.\n\nHow do you want to handle these file name collisions?", cancel: "Skip", accept: "Overwrite");
+
+        if (fileNameCollisions.NotNullNotEmpty() && !overwriteExistingFiles)
+        {
+            files = files.Where(file => !fileNameCollisions.Contains(file.FileName));
         }
 
         uploadProgress.Clear();
@@ -445,7 +483,7 @@ else
 
             uploadProgress[file.FileName] = (0, fileSizeBytes);
 
-            Task uploadTask = sftpService.UploadFileAsync(file.FullPath, $"{currentDirectory.TrimEnd('/').TrimEnd('\\')}/{file.FileName}", (ulong progress) =>
+            Task uploadTask = sftpService.UploadFileAsync(file.FullPath, $"{currentDirectory.TrimEnd('/').TrimEnd('\\')}/{file.FileName}", overwriteExistingFiles, (ulong progress) =>
             {
                 (ulong, ulong) uploadProgressTuple = uploadProgress[file.FileName];
 
