@@ -245,7 +245,7 @@ else
 
         if (currentSftpConfig.PrivateKey.NullOrEmpty() && currentSftpConfig.Password.NullOrEmpty())
         {
-            string password = await Application.Current!.MainPage!.DisplayPromptAsync("Enter password", $"Please enter the password for user {currentSftpConfig.Username} on {currentSftpConfig.Host}:{currentSftpConfig.Port}", "Login", "Cancel");
+            string password = await Application.Current!.MainPage!.DisplayPromptAsync("Enter password", $"Please enter the password for user {currentSftpConfig.Username} on {currentSftpConfig.Host}:{currentSftpConfig.Port}\n", "Login", "Cancel");
 
             if (password.NullOrEmpty())
             {
@@ -398,7 +398,7 @@ else
             return;
         }
 
-        string directoryName = await Application.Current.MainPage.DisplayPromptAsync("Enter new directory name", "Enter name for the new directory", "Create", "Cancel", keyboard: Keyboard.Text);
+        string directoryName = await Application.Current.MainPage.DisplayPromptAsync("Enter new directory name", "Enter name for the new directory\n", "Create", "Cancel", keyboard: Keyboard.Text);
 
         directoryName = $"{currentDirectory.TrimEnd('/').TrimEnd('\\')}/{directoryName}";
 
@@ -423,7 +423,7 @@ else
 
         string objectType = (file.IsDirectory ? "directory" : "file");
 
-        string newName = await Application.Current.MainPage.DisplayPromptAsync($"Enter new {objectType} name", $"Enter new name for \"{file.FullName}\"", "Rename", "Cancel", keyboard: Keyboard.Text);
+        string newName = await Application.Current.MainPage.DisplayPromptAsync($"Enter new {objectType} name", $"Enter new name for \"{file.FullName}\"\n", "Rename", "Cancel", keyboard: Keyboard.Text);
 
         string newRemotePath = $"{currentDirectory.TrimEnd('/').TrimEnd('\\')}/{newName}";
 
@@ -461,9 +461,17 @@ else
         }
     }
 
-    private void OnClickSetPermissions(SftpFile file)
+    private async Task OnClickSetPermissions(SftpFile file)
     {
-    // TODO: implement chmod here (but expect nothing...)
+        string chmod = await Application.Current.MainPage.DisplayPromptAsync("Enter new permission octal", "Enter the new permission set in octal notation (as if you were running \"chmod\" on a *nix server).\n\nE.g. 640, 760, etc...\n", "Save", "Cancel", keyboard: Keyboard.Numeric);
+
+        if (chmod is null || chmod.Length != 3)
+        {
+            await Application.Current.MainPage.DisplayAlert("Invalid permission octal", $"The value {chmod} is not a valid Unix permission octal.\n\nPlease enter a valid value such as 640, 760, etc...\n\nRefer to https://chmod-calculator.com for a simple, learning-by-doing overview of what values are valid here.\n", "OK");
+            return;
+        }
+
+        // TODO: implement chmod here (but expect nothing...)
     }
 
     private async Task OnClickDelete(SftpFile file)

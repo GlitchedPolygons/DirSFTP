@@ -16,11 +16,11 @@
     along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 
-using GlitchedPolygons.DirSFTP.Models;
-using GlitchedPolygons.ExtensionMethods;
-using Microsoft.Extensions.Logging;
 using Renci.SshNet;
 using Renci.SshNet.Sftp;
+using Microsoft.Extensions.Logging;
+using GlitchedPolygons.DirSFTP.Models;
+using GlitchedPolygons.ExtensionMethods;
 
 namespace GlitchedPolygons.DirSFTP.Services.SFTP;
 
