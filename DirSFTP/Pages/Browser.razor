@@ -410,7 +410,7 @@ else
     {
         return files
             .GroupBy(file => file.FileName)
-            .All(fileGroup => fileGroup.Count() == 1);
+            .Any(fileGroup => fileGroup.Count() > 1);
     }
 
     private string GetDuplicateFileNames(IEnumerable<FileResult> files)
