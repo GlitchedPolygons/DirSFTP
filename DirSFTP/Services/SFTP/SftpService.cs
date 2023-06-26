@@ -114,6 +114,11 @@ public class SftpService : ISftpService
         }
     }
 
+    public Task<bool> ExistsAsync(string remotePath)
+    {
+        return Task.Run(() => Exists(remotePath));
+    }
+
     public IEnumerable<SftpFile> ListAll(string remoteDirectory = ".")
     {
         using SftpClient client = CreateClient();

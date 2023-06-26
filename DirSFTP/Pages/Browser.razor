@@ -18,9 +18,9 @@
 
 @page "/browse"
 
-@inject NavigationManager NavigationManager
-
 @inject IConfigStorage ConfigStorage
+@inject IUploadLockService UploadLock
+@inject NavigationManager NavigationManager
 
 <PageTitle>
     DirSFTP - @currentDirectory
@@ -31,9 +31,10 @@
 @using System.Collections.Concurrent;
 @using GlitchedPolygons.DirSFTP.Models
 @using GlitchedPolygons.DirSFTP.Services
-@using GlitchedPolygons.DirSFTP.ExtensionMethods
-@using GlitchedPolygons.DirSFTP.Services.Config
+@using GlitchedPolygons.DirSFTP.Services.Lock
 @using GlitchedPolygons.DirSFTP.Services.SFTP
+@using GlitchedPolygons.DirSFTP.Services.Config
+@using GlitchedPolygons.DirSFTP.ExtensionMethods
 @using GlitchedPolygons.ExtensionMethods
 
 <h1>
@@ -67,7 +68,7 @@
         <button class="btn btn-primary"
                 type="button"
                 id="go-btn"
-                disabled="@busy"
+            disabled="@UploadLock.IsLocked"
                 @onclick="() => OpenDirectory(currentDirectory)">
             Go
         </button>
@@ -207,7 +208,7 @@ else
     </table>
 
     <button @onclick="OnClickUpload"
-            disabled="@busy"
+        disabled="@UploadLock.IsLocked"
             class="btn btn-primary mt-4 stretch-when-narrow">
         Upload
     </button>
@@ -215,7 +216,7 @@ else
     <span style="margin-left: 8px; margin-right: 8px;"></span>
 
     <button @onclick="OnClickCreateDirectory"
-            disabled="@busy"
+            disabled="@UploadLock.IsLocked"
             class="btn btn-primary mt-4 stretch-when-narrow">
         Create directory
     </button>
@@ -255,7 +256,6 @@ else
 
 @code
 {
-    private bool busy = false;
     private string currentDirectory = ".";
     private SftpConfig currentSftpConfig = null;
     private ISftpService sftpService = null;
@@ -264,6 +264,8 @@ else
 
     protected override async Task OnInitializedAsync()
     {
+        UploadLock.ChangedLockState += OnChangedUploadLockState;
+
         string lastSftpConfigId = await SecureStorage.GetAsync(Constants.PreferenceIds.LAST_SFTP_CONFIG_ID);
 
         currentDirectory = await SecureStorage.GetAsync(Constants.PreferenceIds.LAST_DIRECTORY);
@@ -300,10 +302,19 @@ else
         sftpService = new SftpService(currentSftpConfig);
 
         await OpenDirectory(currentDirectory);
+
+        OnChangedUploadLockState(UploadLock.IsLocked);
+    }
+
+    private void OnChangedUploadLockState(bool nowLocked)
+    {
+        InvokeAsync(StateHasChanged);
     }
 
     private void OnClickDisconnect()
     {
+        UploadLock.Unlock();
+
         currentDirectory = string.Empty;
 
         SecureStorage.Remove(Constants.PreferenceIds.LAST_DIRECTORY);
@@ -425,26 +436,26 @@ else
 
     private async Task OnClickUpload()
     {
-        if (busy)
+        if (UploadLock.IsLocked)
         {
             return;
         }
 
 
-        busy = true;
+        UploadLock.Lock();
 
         IEnumerable<FileResult> files = await FilePicker.Default.PickMultipleAsync(PickOptions.Default);
 
         if (!files.Any())
         {
-            busy = false;
+            UploadLock.Unlock();
             return;
         }
 
         if (HasDuplicateFileNames(files))
         {
             await Application.Current.MainPage.DisplayAlert("Upload failed", $"You selected the following file names more than once:\n\n{GetDuplicateFileNames(files)}\"\n\nDuplicate file names within a single directory are not allowed. Please reselect files with distinct file names.", "OK");
-            busy = false;
+            UploadLock.Unlock();
             return;
         }
 
@@ -470,7 +481,7 @@ else
 
         if (!files.Any())
         {
-            busy = false;
+            UploadLock.Unlock();
             return;
         }
 
@@ -517,14 +528,14 @@ else
 
         uploadProgress.Clear();
 
-        busy = false;
+        UploadLock.Unlock();
 
         await OpenDirectory(currentDirectory);
     }
 
     private async Task OnClickCreateDirectory()
     {
-        if (sftpService is null || Application.Current?.MainPage is null || busy)
+        if (sftpService is null || Application.Current?.MainPage is null || UploadLock.IsLocked)
         {
             return;
         }
@@ -558,6 +569,12 @@ else
         }
 
         string objectType = (file.IsDirectory ? "directory" : "file");
+
+        if (!await sftpService.ExistsAsync(file.FullName))
+        {
+            await Application.Current.MainPage.DisplayAlert($"Renaming {objectType} \"{file.Name}\" failed", $"Failed to rename {objectType} \"{file.Name}\" because it was not found in the remote directory \"{currentDirectory}\".\n\nPlease refresh and try again, or double-check permissions.", "OK");
+            return;
+        }
 
         string newName = await Application.Current.MainPage.DisplayPromptAsync($"Enter new {objectType} name", $"Enter new name for \"{file.FullName}\"\n", "Rename", "Cancel", keyboard: Keyboard.Text);
 
@@ -604,6 +621,14 @@ else
             return;
         }
 
+        string objectType = (file.IsDirectory ? "directory" : "file");
+
+        if (!await sftpService.ExistsAsync(file.FullName))
+        {
+            await Application.Current.MainPage.DisplayAlert($"chmod failed", $"Failed to chmod the {objectType} \"{file.Name}\" because it was not found in the remote directory \"{currentDirectory}\".\n\nPlease refresh and try again, or double-check permissions.", "OK");
+            return;
+        }
+
         string chmodString = await Application.Current.MainPage.DisplayPromptAsync("Enter new permission octal", "Enter the new permission set in octal notation (as if you were running \"chmod\" on a *nix server).\n\nE.g. 640, 760, etc...\n", "Save", "Cancel", keyboard: Keyboard.Numeric);
 
         if (chmodString is null || chmodString.Length != 3 || !short.TryParse(chmodString, out short chmod))
@@ -641,6 +666,14 @@ else
     {
         if (file is null || sftpService is null || Application.Current?.MainPage is null)
         {
+            return;
+        }
+
+        string objectType = (file.IsDirectory ? "directory" : "file");
+
+        if (!await sftpService.ExistsAsync(file.FullName))
+        {
+            await Application.Current.MainPage.DisplayAlert($"Deleting {objectType} \"{file.Name}\" failed", $"Failed to delete the {objectType} \"{file.Name}\" because it was not found in the remote directory \"{currentDirectory}\".\n\nPlease refresh and try again, or double-check permissions.", "OK");
             return;
         }
 

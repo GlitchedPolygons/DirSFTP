@@ -17,8 +17,10 @@
 *@
 
 @inject NavigationManager NavigationManager
+@inject IUploadLockService UploadLock
 
 @using GlitchedPolygons.ExtensionMethods;
+@using GlitchedPolygons.DirSFTP.Services.Lock
 
 <div class="top-row ps-3 navbar navbar-dark">
 
@@ -46,59 +48,66 @@
 
     <nav class="flex-column">
 
-        <div class="nav-item px-3">
+        @if (UploadLock.IsLocked)
+        {
+            <p style="margin: 32px">Upload in progress, please stand by...</p>
+        }
+        else 
+        {
+            <div class="nav-item px-3">
 
-            <NavLink class="nav-link"
+                <NavLink class="nav-link"
                      href=""
                      Match="NavLinkMatch.All">
 
-                <span class="oi oi-home"
+                    <span class="oi oi-home"
                       aria-hidden="true">
-                </span> Home
+                    </span> Home
 
-            </NavLink>
+                </NavLink>
 
-        </div>
+            </div>
 
-        <div class="nav-item px-3">
+            <div class="nav-item px-3">
 
-            <NavLink class="nav-link"
+                <NavLink class="nav-link"
                      href="browse">
 
-                <span class="oi oi-list-rich"
+                    <span class="oi oi-list-rich"
                       aria-hidden="true">
-                </span> Browse
+                    </span> Browse
 
-            </NavLink>
+                </NavLink>
 
-        </div>
+            </div>
 
-        <div class="nav-item px-3">
+            <div class="nav-item px-3">
 
-            <NavLink class="nav-link"
+                <NavLink class="nav-link"
                      href="fingerprints">
 
-                <span class="oi oi-key"
+                    <span class="oi oi-key"
                       aria-hidden="true">
-                </span> Fingerprints
+                    </span> Fingerprints
 
-            </NavLink>
+                </NavLink>
 
-        </div>
+            </div>
 
-        <div class="nav-item px-3">
+            <div class="nav-item px-3">
 
-            <NavLink class="nav-link"
+                <NavLink class="nav-link"
                      href="javascript:void(0)"
                      @onclick="ToggleTheme">
 
-                <span class="oi @(darkTheme ? "oi-sun" : "oi-moon")"
+                    <span class="oi @(darkTheme ? "oi-sun" : "oi-moon")"
                       aria-hidden="true">
-                </span> @(darkTheme ? "Light theme" : "Dark theme")
+                    </span> @(darkTheme ? "Light theme" : "Dark theme")
 
-            </NavLink>
+                </NavLink>
 
-        </div>
+            </div>
+        }
 
     </nav>
 
@@ -122,6 +131,15 @@
         string darkThemePreference = await SecureStorage.GetAsync(Constants.PreferenceIds.DARK_THEME);
 
         darkTheme = darkThemePreference.NullOrEmpty() || darkThemePreference.ToLowerInvariant() == "true";
+
+        UploadLock.ChangedLockState += OnChangedUploadLockState;
+
+        OnChangedUploadLockState(UploadLock.IsLocked);
+    }
+
+    private void OnChangedUploadLockState(bool nowLocked)
+    {
+        InvokeAsync(StateHasChanged);
     }
 
     private async Task ToggleTheme()

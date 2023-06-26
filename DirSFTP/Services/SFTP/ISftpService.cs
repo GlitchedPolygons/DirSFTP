@@ -24,6 +24,7 @@ public interface ISftpService
 {
     bool StillConnected { get; }
     bool Exists(string remotePath);
+    Task<bool> ExistsAsync(string remotePath);
     IEnumerable<SftpFile> ListAll(string remoteDirectory = ".");
     Task<IEnumerable<SftpFile>> ListAllAsync(string remoteDirectory = ".");
     bool CreateDirectory(string remoteDirectory);
