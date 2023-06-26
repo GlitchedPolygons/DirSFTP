@@ -384,19 +384,19 @@ else
             remoteDirectory = remoteDirectory.Replace('\\', '/');
         }
 
-        if (!sftpService.Exists(remoteDirectory))
+        if (!await sftpService.ExistsAsync(remoteDirectory))
         {
             if (Application.Current?.MainPage is not null)
             {
                 if (await Application.Current.MainPage.DisplayAlert("Directory access failed", $"The directory \"{remoteDirectory}\" couldn't be accessed. How do you want to proceed?", "Return to default directory", "Cancel (stay in current directory)"))
                 {
-                    if (sftpService.Exists(currentSftpConfig.DefaultRemoteDirectory))
+                    if (await sftpService.ExistsAsync(currentSftpConfig.DefaultRemoteDirectory))
                     {
                         await OpenDirectory(currentSftpConfig.DefaultRemoteDirectory);
                         return;
                     }
 
-                    if (sftpService.Exists("."))
+                    if (await sftpService.ExistsAsync("."))
                     {
                         await OpenDirectory(".");
                         return;
@@ -580,7 +580,7 @@ else
 
         string newRemotePath = $"{currentDirectory.TrimEnd('/').TrimEnd('\\')}/{newName}";
 
-        if (sftpService.Exists(newRemotePath))
+        if (await sftpService.ExistsAsync(newRemotePath))
         {
             await Application.Current.MainPage.DisplayAlert($"Renaming {objectType} \"{file.Name}\" failed", $"Failed to rename {objectType} \"{file.Name}\" because there already is a {objectType} with that name under \"{currentDirectory}\"", "OK");
             return;
