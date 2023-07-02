@@ -576,7 +576,13 @@ else
             return;
         }
 
-        string newName = await Application.Current.MainPage.DisplayPromptAsync($"Enter new {objectType} name", $"Enter new name for \"{file.FullName}\"\n", "Rename", "Cancel", keyboard: Keyboard.Text);
+        string newName = await Application.Current.MainPage.DisplayPromptAsync($"Enter new {objectType} name", $"Enter new name for \"{file.FullName}\"\n", "Rename", "Cancel", keyboard: Keyboard.Text, initialValue: file.Name);
+
+        if (!newName.IsValidFileName())
+        {
+            await Application.Current.MainPage.DisplayAlert($"Renaming {objectType} \"{file.Name}\" failed", $"Failed to rename {objectType} \"{file.Name}\" because the new file name you entered is either empty or invalid. Please only use allowed file name characters!", "OK");
+            return;
+        }
 
         string newRemotePath = $"{currentDirectory.TrimEnd('/').TrimEnd('\\')}/{newName}";
 
