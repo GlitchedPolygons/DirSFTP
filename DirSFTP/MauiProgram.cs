@@ -16,6 +16,8 @@
     along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 
+using CommunityToolkit.Maui;
+using CommunityToolkit.Maui.Storage;
 using GlitchedPolygons.DirSFTP.Services.Config;
 using GlitchedPolygons.DirSFTP.Services.HostKey;
 using GlitchedPolygons.DirSFTP.Services.Lock;
@@ -32,6 +34,7 @@ public static class MauiProgram
 
         builder
             .UseMauiApp<App>()
+            .UseMauiCommunityToolkit()
             .ConfigureFonts(fonts => { fonts.AddFont("OpenSans-Regular.ttf", "OpenSansRegular"); });
 
         builder.Services.AddMauiBlazorWebView();
@@ -40,6 +43,7 @@ public static class MauiProgram
         builder.Services.AddTransient<IViewportService, ViewportService>();
         builder.Services.AddTransient<IFingerprintService, FingerprintService>();
         builder.Services.AddSingleton<IUploadLockService, UploadLockService>();
+        builder.Services.AddSingleton<IFileSaver>(FileSaver.Default);
 
 #if DEBUG
         builder.Services.AddBlazorWebViewDeveloperTools();

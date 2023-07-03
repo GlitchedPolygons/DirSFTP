@@ -242,7 +242,7 @@ public class SftpService : ISftpService
         }
     }
 
-    public void DownloadFile(string remoteFilePath, string localFilePath)
+    public MemoryStream DownloadFile(string remoteFilePath)
     {
         using SftpClient client = CreateClient();
 
@@ -250,15 +250,40 @@ public class SftpService : ISftpService
         {
             client.Connect();
 
-            using FileStream fileStream = File.Create(localFilePath);
+            MemoryStream fileStream = new();
 
             client.DownloadFile(remoteFilePath, fileStream);
 
-            logger?.LogInformation("{Class}::{Method}: Finished downloading the file [{LocalFilePath}] from [{RemoteFilePath}]", nameof(SftpService), nameof(DownloadFile), localFilePath, remoteFilePath);
+            logger?.LogInformation("{Class}::{Method}: Finished downloading the file [{RemoteFilePath}]", nameof(SftpService), nameof(DownloadFile), remoteFilePath);
+
+            return fileStream;
         }
         catch (Exception exception)
         {
-            logger?.LogError(exception, "{Class}::{Method}: Failed downloading the file [{LocalFilePath}] from [{RemoteFilePath}]", nameof(SftpService), nameof(DownloadFile), localFilePath, remoteFilePath);
+            logger?.LogError(exception, "{Class}::{Method}: Failed downloading the file [{RemoteFilePath}]", nameof(SftpService), nameof(DownloadFile), remoteFilePath);
+            return null;
+        }
+        finally
+        {
+            client.Disconnect();
+        }
+    }
+
+    public async Task DownloadFileAsync(string remoteFilePath, Stream destinationStream, Action<ulong> downloadCallback = null)
+    {
+        using SftpClient client = CreateClient();
+
+        try
+        {
+            client.Connect();
+
+            await client.DownloadAsync(remoteFilePath, destinationStream, downloadCallback);
+
+            logger?.LogInformation("{Class}::{Method}: Finished downloading the file [{RemoteFilePath}]", nameof(SftpService), nameof(DownloadFileAsync), remoteFilePath);
+        }
+        catch (Exception exception)
+        {
+            logger?.LogError(exception, "{Class}::{Method}: Failed downloading the file [{RemoteFilePath}]", nameof(SftpService), nameof(DownloadFileAsync), remoteFilePath);
         }
         finally
         {

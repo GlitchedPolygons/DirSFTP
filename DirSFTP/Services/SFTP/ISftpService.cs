@@ -30,7 +30,8 @@ public interface ISftpService
     bool CreateDirectory(string remoteDirectory);
     void UploadFile(string localFilePath, string remoteFilePath);
     Task UploadFileAsync(string localFilePath, string remoteFilePath, bool overwriteExistingFiles = false, Action<ulong> uploadCallback = null);
-    void DownloadFile(string remoteFilePath, string localFilePath);
+    MemoryStream DownloadFile(string remoteFilePath);
+    Task DownloadFileAsync(string remoteFilePath, Stream destinationStream, Action<ulong> downloadCallback = null);
     bool Rename(string remotePath, string newRemotePath);
     bool ChangePermissions(string remotePath, short newPermissions, bool recursively = false);
     bool Delete(SftpFile file);
