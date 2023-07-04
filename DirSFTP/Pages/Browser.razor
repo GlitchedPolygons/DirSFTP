@@ -101,7 +101,57 @@
 }
 else
 {
-    <table class="table table-hover @(files.Count() > 2 ? "table-striped" : "")">
+
+<div class="mobile-only">
+
+    <div class="accordion" id="accordion">
+
+        @foreach (SftpFile file in files)
+        {
+            if (file.Name == "." || (file.Name == ".." && currentDirectory.Count(c => c is '/' or '\\') <= 1))
+            {
+                continue;
+            }
+
+            <div class="accordion-item">
+
+                <h2 class="accordion-header" 
+                    id="heading_@file.Name.SHA1()">
+
+                    <button class="accordion-button collapsed" 
+                            style="word-wrap: anywhere"
+                            type="button" 
+                            aria-expanded="false" 
+                            data-bs-toggle="collapse"
+                                data-bs-target="#collapse_@file.Name.SHA1()"
+                                aria-controls="collapse_@file.Name.SHA1()">
+                        @(file.Name.TrimEnd('/').TrimEnd('\\') + (file.IsDirectory ? "/" : string.Empty))
+                    </button>
+
+                </h2>
+
+                <div id="collapse_@file.Name.SHA1()"
+                        class="accordion-collapse collapse"
+                        aria-labelledby="heading_@file.Name.SHA1()"
+                        data-bs-parent="#accordion">
+
+                    <div class="accordion-body">
+
+                        <strong><code>@file.FullName</code></strong><br />
+
+                        <button class="btn btn-danger mt-4"
+                                type="button">
+                            Remove
+                        </button>
+                    </div>
+                </div>
+            </div>
+        }
+
+    </div>
+</div>
+
+    <table class="table table-hover @(files.Count() > 2 ? "table-striped" : "") desktop-only">
 
         <thead>
 
@@ -448,6 +498,7 @@ else
                             await Task.Delay(256 * 8);
 
                             fileStream.Dispose();
+                            fileStream = null;
 
                             downloadProgress.Remove(file.Name);
 
