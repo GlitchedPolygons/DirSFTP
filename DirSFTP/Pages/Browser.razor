@@ -113,35 +113,60 @@ else
                 continue;
             }
 
+            string fileNameHash = file.Name.SHA1();
+
             <div class="accordion-item">
 
                 <h2 class="accordion-header" 
-                    id="heading_@file.Name.SHA1()">
+                    id="heading_@fileNameHash">
 
                     <button class="accordion-button collapsed" 
                             style="word-wrap: anywhere"
                             type="button" 
                             aria-expanded="false" 
                             data-bs-toggle="collapse"
-                                data-bs-target="#collapse_@file.Name.SHA1()"
-                                aria-controls="collapse_@file.Name.SHA1()">
+                            data-bs-target="#collapse_@fileNameHash"
+                            aria-controls="collapse_@fileNameHash">
                         @(file.Name.TrimEnd('/').TrimEnd('\\') + (file.IsDirectory ? "/" : string.Empty))
                     </button>
 
                 </h2>
 
-                <div id="collapse_@file.Name.SHA1()"
+                <div id="collapse_@fileNameHash"
                         class="accordion-collapse collapse"
-                        aria-labelledby="heading_@file.Name.SHA1()"
+                        aria-labelledby="heading_@fileNameHash"
                         data-bs-parent="#accordion">
 
                     <div class="accordion-body">
 
                         <strong><code>@file.FullName</code></strong><br />
 
-                        <button class="btn btn-danger mt-4"
+                        <button class="btn btn-primary mt-4"
+                                title="@(file.IsDirectory ? "Open directory" : "Download")"
+                                @onclick="() => OnClickFile(file)"
                                 type="button">
-                            Remove
+                                <span class="oi oi-data-transfer-download"></span>
+                        </button>
+
+                        <button class="btn btn-secondary mt-4"
+                                title="Rename"
+                                @onclick="() => OnClickRename(file)"
+                                type="button">
+                                <span class="oi oi-pencil"></span>
+                        </button>
+
+                        <button class="btn btn-secondary mt-4"
+                                title="Change permissions"
+                                @onclick="() => OnClickSetPermissions(file)"
+                                type="button">
+                            <span class="oi oi-shield"></span>
+                        </button>
+
+                        <button class="btn btn-danger mt-4"
+                                title="Delete"
+                                @onclick="() => OnClickDelete(file)"
+                                type="button">
+                            <span class="oi oi-trash"></span>
                         </button>
                     </div>
                 </div>
@@ -737,6 +762,11 @@ else
         }
 
         string newName = await Application.Current.MainPage.DisplayPromptAsync($"Enter new {objectType} name", $"Enter new name for \"{file.FullName}\"\n", "Rename", "Cancel", keyboard: Keyboard.Text, initialValue: file.Name);
+
+        if (newName.NullOrEmpty())
+        {
+            return;
+        }
 
         if (!newName.IsValidFileName())
         {
