@@ -23,13 +23,22 @@ using GlitchedPolygons.DirSFTP.Services.HostKey;
 using GlitchedPolygons.DirSFTP.Services.Lock;
 using GlitchedPolygons.DirSFTP.Services.Viewport;
 using Microsoft.Extensions.DependencyInjection;
+using System.Diagnostics;
+using System.Reflection;
 
 namespace GlitchedPolygons.DirSFTP;
 
 public static class MauiProgram
 {
+    private static Mutex mutex;
+
     public static MauiApp CreateMauiApp()
     {
+        if (!IsSingleInstance())
+        {
+            Process.GetCurrentProcess().Kill();
+        }
+
         MauiAppBuilder builder = MauiApp.CreateBuilder();
 
         builder
@@ -50,5 +59,21 @@ public static class MauiProgram
 #endif
 
         return builder.Build();
+    }
+
+    private static bool IsSingleInstance()
+    {
+        mutex = new Mutex(false, Assembly.GetExecutingAssembly().FullName);
+        GC.KeepAlive(mutex);
+
+        try
+        {
+            return mutex.WaitOne(0, false);
+        }
+        catch (AbandonedMutexException)
+        {
+            mutex.ReleaseMutex();
+            return mutex.WaitOne(0, false);
+        }
     }
 }

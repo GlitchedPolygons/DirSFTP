@@ -100,6 +100,12 @@ a, .btn-link {
     }
 }
 
+@media (max-width: 1280px) {
+    .hide-when-narrower-than-1280px {
+        display: none;
+    }
+}
+
 .underline-on-hover {
     text-decoration: none;
 }
@@ -108,9 +114,17 @@ a, .btn-link {
         text-decoration: underline;
     }
 
-@media (max-width: 768px) {
+@media (max-width: 1024px) {
 
     .stretch-when-narrow {
+        width: 100%;
+        margin-top: 8px;
+    }
+}
+
+@media (max-width: 1280px) {
+
+    .stretch-when-narrower-than-1280px {
         width: 100%;
         margin-top: 8px;
     }

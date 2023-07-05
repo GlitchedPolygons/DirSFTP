@@ -29,8 +29,10 @@
 
 @using Renci.SshNet
 @using Renci.SshNet.Sftp
-@using System.Collections.Concurrent;
+@using CommunityToolkit.Maui.Core;
+@using CommunityToolkit.Maui.Alerts;
 @using CommunityToolkit.Maui.Storage;
+@using System.Collections.Concurrent;
 @using GlitchedPolygons.DirSFTP.Models
 @using GlitchedPolygons.DirSFTP.Services
 @using GlitchedPolygons.DirSFTP.Services.Lock
@@ -101,80 +103,116 @@
 }
 else
 {
+    <div class="mobile-only">
 
-<div class="mobile-only">
+        <div class="accordion" id="accordion">
 
-    <div class="accordion" id="accordion">
-
-        @foreach (SftpFile file in files)
-        {
-            if (file.Name == "." || (file.Name == ".." && currentDirectory.Count(c => c is '/' or '\\') <= 1))
+            @foreach (SftpFile file in files)
             {
-                continue;
-            }
+                if (file.Name == "." || (file.Name == ".." && currentDirectory.Count(c => c is '/' or '\\') <= 1))
+                {
+                    continue;
+                }
 
-            string fileNameHash = file.Name.SHA1();
+                bool isDotDotDir = file.IsDirectory && file.Name == "..";
 
-            <div class="accordion-item">
+                string fileNameHash = file.Name.SHA1();
 
-                <h2 class="accordion-header" 
-                    id="heading_@fileNameHash">
+                string fileClickLabel = file.IsDirectory ? "Open directory" : "Download";
 
-                    <button class="accordion-button collapsed" 
-                            style="word-wrap: anywhere"
-                            type="button" 
-                            aria-expanded="false" 
-                            data-bs-toggle="collapse"
-                            data-bs-target="#collapse_@fileNameHash"
-                            aria-controls="collapse_@fileNameHash">
-                        @(file.Name.TrimEnd('/').TrimEnd('\\') + (file.IsDirectory ? "/" : string.Empty))
-                    </button>
+                <div class="accordion-item">
 
-                </h2>
+                    <h2 class="accordion-header" 
+                        id="heading_@fileNameHash">
 
-                <div id="collapse_@fileNameHash"
-                        class="accordion-collapse collapse"
-                        aria-labelledby="heading_@fileNameHash"
-                        data-bs-parent="#accordion">
-
-                    <div class="accordion-body">
-
-                        <strong><code>@file.FullName</code></strong><br />
-
-                        <button class="btn btn-primary mt-4"
-                                title="@(file.IsDirectory ? "Open directory" : "Download")"
-                                @onclick="() => OnClickFile(file)"
-                                type="button">
-                                <span class="oi oi-data-transfer-download"></span>
+                        <button class="accordion-button collapsed" 
+                                style="word-wrap: anywhere"
+                                type="button"
+                                aria-expanded="false" 
+                                data-bs-toggle="collapse"
+                                data-bs-target="#collapse_@fileNameHash"
+                                aria-controls="collapse_@fileNameHash">
+                            @(file.Name.TrimEnd('/').TrimEnd('\\') + (file.IsDirectory ? "/" : string.Empty))
                         </button>
+                    </h2>
 
-                        <button class="btn btn-secondary mt-4"
-                                title="Rename"
-                                @onclick="() => OnClickRename(file)"
-                                type="button">
-                                <span class="oi oi-pencil"></span>
-                        </button>
+                    <div id="collapse_@fileNameHash"
+                         class="accordion-collapse collapse"
+                         aria-labelledby="heading_@fileNameHash"
+                         data-bs-parent="#accordion">
 
-                        <button class="btn btn-secondary mt-4"
-                                title="Change permissions"
-                                @onclick="() => OnClickSetPermissions(file)"
-                                type="button">
-                            <span class="oi oi-shield"></span>
-                        </button>
+                        <div class="accordion-body">
 
-                        <button class="btn btn-danger mt-4"
-                                title="Delete"
-                                @onclick="() => OnClickDelete(file)"
-                                type="button">
-                            <span class="oi oi-trash"></span>
-                        </button>
+                            @if(!isDotDotDir)
+                            {
+                            <p>
+                                Full path:<br />
+                                <strong><code>@file.FullName</code></strong>
+                            </p>
+
+                            <p>
+                                Last accessed:<br />
+                                <strong><code>@file.LastAccessTime.ToString("yyyy-MM-dd HH:mm:ss")</code></strong>
+                            </p>
+                        
+                            <p>
+                                Last modified:<br />
+                                <strong><code>@file.LastWriteTime.ToString("yyyy-MM-dd HH:mm:ss")</code></strong>
+                            </p>
+
+                            <p>
+                                Permissions:<br />
+                                <strong><code title="@file.ToHumanReadablePermissionMatrix()">@file.ToOctalNotation()</code></strong>
+                            </p>
+                        
+                            <p>
+                                Owner:<br />
+                                <strong><code>@file.UserId:@file.GroupId</code></strong>
+                            </p>
+                            }
+
+                            <button class="btn btn-primary mt-3 stretch-when-narrow"
+                                    title="@fileClickLabel"
+                                    @onclick="() => OnClickFile(file)"
+                                    data-bs-toggle="collapse"
+                                    data-bs-target="#collapse_@(file.IsDirectory ? fileNameHash : string.Empty)"
+                                    aria-controls="collapse_@fileNameHash"
+                                    type="button">
+                                <span class="oi @(file.IsDirectory ? "oi-folder" : "oi-data-transfer-download")"></span> <span class="mobile-only">@fileClickLabel</span>
+                            </button>
+
+                            @if(!isDotDotDir)
+                            {
+
+                            <button class="btn btn-secondary mt-3 stretch-when-narrow"
+                                    title="Rename"
+                                    @onclick="() => OnClickRename(file)"
+                                    type="button">
+                                <span class="oi oi-pencil"></span> <span class="mobile-only">Rename</span>
+                            </button>
+
+                            <button class="btn btn-secondary mt-3 stretch-when-narrow"
+                                    title="Change permissions"
+                                    @onclick="() => OnClickSetPermissions(file)"
+                                    type="button">
+                                <span class="oi oi-shield"></span> <span class="mobile-only">Change permissions</span>
+                            </button>
+
+                            <button class="btn btn-danger mt-3 stretch-when-narrow"
+                                    title="Delete"
+                                    @onclick="() => OnClickDelete(file)"
+                                    type="button">
+                                <span class="oi oi-trash"></span> <span class="mobile-only">Delete</span>
+                            </button>
+
+                            }
+                        </div>
                     </div>
                 </div>
-            </div>
-        }
+            }
 
+        </div>
     </div>
-</div>
 
     <table class="table table-hover @(files.Count() > 2 ? "table-striped" : "") desktop-only">
 
@@ -196,7 +234,8 @@ else
             </th>
 
             <th title="Format: yyyy-MM-dd HH:mm:ss"
-                style="min-width: 192px">
+                style="min-width: 192px" 
+                class="hide-when-narrower-than-1280px">
                 Last modified
             </th>
 
@@ -261,7 +300,8 @@ else
                     @file.LastAccessTime.ToString("yyyy-MM-dd HH:mm:ss")
                 </td>
 
-                <td title="@file.LastWriteTimeUtc.ToString("yyyy-MM-dd HH:mm:ss") (UTC)">
+                <td title="@file.LastWriteTimeUtc.ToString("yyyy-MM-dd HH:mm:ss") (UTC)"
+                    class="hide-when-narrower-than-1280px">
                     @file.LastWriteTime.ToString("yyyy-MM-dd HH:mm:ss")
                 </td>
 
@@ -542,7 +582,7 @@ else
         }
     }
 
-    private async Task OpenDirectory(string remoteDirectory)
+    private async Task OpenDirectory(string remoteDirectory, bool forceRefresh = false)
     {
         if (sftpService is null || currentSftpConfig is null)
         {
@@ -599,6 +639,11 @@ else
             .ThenBy(f => f.Name);
 
         await SecureStorage.SetAsync(Constants.PreferenceIds.LAST_DIRECTORY, currentDirectory);
+
+        if (forceRefresh)
+        {
+            NavigationManager.NavigateTo("/browse", true);
+        }
     }
 
     private bool HasDuplicateFileNames(IEnumerable<FileResult> files)
@@ -715,6 +760,14 @@ else
 
         UploadLock.Unlock();
 
+        const double toastFontSize = 14;
+        const string toastText = "Upload queue completed";
+        const ToastDuration toastDuration = ToastDuration.Short;
+
+        await Toast
+          .Make(toastText, toastDuration, toastFontSize)
+          .Show(default);
+
         await OpenDirectory(currentDirectory);
     }
 
@@ -738,6 +791,14 @@ else
 
         if (success)
         {
+            const double toastFontSize = 14;
+            const string toastText = "Directory creation successful";
+            const ToastDuration toastDuration = ToastDuration.Short;
+
+            await Toast
+              .Make(toastText, toastDuration, toastFontSize)
+              .Show(default);
+
             await OpenDirectory(directoryName);
         }
         else
@@ -802,6 +863,14 @@ else
 
         if (success)
         {
+            const double toastFontSize = 14;
+            const string toastText = "Item renamed successfully";
+            const ToastDuration toastDuration = ToastDuration.Short;
+
+            await Toast
+              .Make(toastText, toastDuration, toastFontSize)
+              .Show(default);
+
             await OpenDirectory(currentDirectory);
         }
         else
@@ -827,7 +896,12 @@ else
 
         string chmodString = await Application.Current.MainPage.DisplayPromptAsync("Enter new permission octal", "Enter the new permission set in octal notation (as if you were running \"chmod\" on a *nix server).\n\nE.g. 640, 760, etc...\n", "Save", "Cancel", keyboard: Keyboard.Numeric);
 
-        if (chmodString is null || chmodString.Length != 3 || !short.TryParse(chmodString, out short chmod))
+        if (chmodString.NullOrEmpty())
+        {
+            return;
+        }
+
+        if (chmodString.Length != 3 || !short.TryParse(chmodString, out short chmod))
         {
             await Application.Current.MainPage.DisplayAlert("Invalid permission octal", $"The value {chmodString} is not a valid Unix permission octal.\n\nPlease enter a valid value such as 640, 760, etc...\n\nRefer to https://chmod-calculator.com for a simple, learning-by-doing overview of what values are valid here.\n", "OK");
             return;
@@ -854,6 +928,14 @@ else
         {
             await Application.Current.MainPage.DisplayAlert("chmod result", $"One or more files/subdirectories could not be \"chmodded\" into the permissions octal {chmod}", "OK");
         }
+
+        const double toastFontSize = 14;
+        const string toastText = "chmod operation completed";
+        const ToastDuration toastDuration = ToastDuration.Short;
+
+        await Toast
+          .Make(toastText, toastDuration, toastFontSize)
+          .Show(default);
 
         await OpenDirectory(currentDirectory);
     }
@@ -887,5 +969,13 @@ else
         }
 
         await OpenDirectory(currentDirectory);
+
+        const double toastFontSize = 14;
+        const string toastText = "Item deletion successful";
+        const ToastDuration toastDuration = ToastDuration.Short;
+
+        await Toast
+          .Make(toastText, toastDuration, toastFontSize)
+          .Show(default);
     }
 }
