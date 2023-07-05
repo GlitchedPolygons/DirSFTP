@@ -35,11 +35,21 @@
 
     <PropertyGroup>
       <ApplicationId>com.glitchedpolygons.dirsftp</ApplicationId>
+      <PackageProjectUrl>https://github.com/GlitchedPolygons/DirSFTP</PackageProjectUrl>
+      <GenerateAppInstallerFile>False</GenerateAppInstallerFile>
+      <AppxPackageSigningEnabled>True</AppxPackageSigningEnabled>
+      <PackageCertificateThumbprint>B0D7C81231B45C844538CF2152338FB97E187C70</PackageCertificateThumbprint>
+      <AppxPackageSigningTimestampServerUrl>http://timestamp.digicert.com</AppxPackageSigningTimestampServerUrl>
+      <AppxPackageSigningTimestampDigestAlgorithm>SHA512</AppxPackageSigningTimestampDigestAlgorithm>
+      <AppxAutoIncrementPackageRevision>False</AppxAutoIncrementPackageRevision>
+      <AppxSymbolPackageEnabled>False</AppxSymbolPackageEnabled>
+      <GenerateTestArtifacts>True</GenerateTestArtifacts>
+      <HoursBetweenUpdateChecks>0</HoursBetweenUpdateChecks>
     </PropertyGroup>
 
     <ItemGroup>
 		<!-- App icon for Android -->
-		<MauiIcon Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'android'" Include="Resources\AppIcon\appicon_android.png" ForegroundFile="Resources\AppIcon\appicon_android.png" Color="#450fa9"/>
+		<MauiIcon Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'android'" Include="Resources\AppIcon\appicon_android.png" ForegroundFile="Resources\AppIcon\appicon_android.png" Color="#450fa9" />
 		
         <!-- App Icon -->
         <MauiIcon Include="Resources\AppIcon\appicon.png" />
@@ -72,6 +82,10 @@
       <PackageReference Include="CommunityToolkit.Maui">
         <Version>5.2.0</Version>
       </PackageReference>
+    </ItemGroup>
+
+    <ItemGroup>
+      <Folder Include="Properties\PublishProfiles\" />
     </ItemGroup>
 
 </Project>
