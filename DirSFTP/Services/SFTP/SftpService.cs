@@ -197,7 +197,19 @@ public class SftpService : ISftpService
 
             using FileStream fileStream = File.OpenRead(localFilePath);
 
-            client.UploadFile(fileStream, remoteFilePath);
+            string partFragmentRemoteFilePath = $"{remoteFilePath}.part";
+
+            client.UploadFile(fileStream, partFragmentRemoteFilePath);
+
+            if (client.Exists(remoteFilePath))
+            {
+                client.DeleteFile(remoteFilePath);
+            }
+
+            if (!Rename(partFragmentRemoteFilePath, remoteFilePath))
+            {
+                logger?.LogWarning("{Class}::{Method}: Finished uploading the file [{LocalFilePath}] to [{RemoteFilePath}], but failed to trim the \".part\" file extension from the destination file path afterwards.", nameof(SftpService), nameof(UploadFile), localFilePath, remoteFilePath);
+            }
 
             logger?.LogInformation("{Class}::{Method}: Finished uploading the file [{LocalFilePath}] to [{RemoteFilePath}]", nameof(SftpService), nameof(UploadFile), localFilePath, remoteFilePath);
         }
@@ -224,6 +236,13 @@ public class SftpService : ISftpService
             string partFragmentRemoteFilePath = $"{remoteFilePath}.part";
 
             await client.UploadAsync(fileStream, partFragmentRemoteFilePath, overwriteExistingFiles, uploadCallback);
+
+            if (client.Exists(remoteFilePath) && overwriteExistingFiles)
+            {
+                client.DeleteFile(remoteFilePath);
+            }
+
+            await Task.Delay(32);
 
             if (!Rename(partFragmentRemoteFilePath, remoteFilePath))
             {
