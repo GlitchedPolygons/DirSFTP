@@ -51,12 +51,20 @@
 {
     <p>
         @currentSftpConfig.Username@@@currentSftpConfig.Host:@currentSftpConfig.Port
-        <span class="oi oi-account-logout"
+        <span class="oi oi-account-logout desktop-only"
               title="Disconnect"
               style="margin-left: 8px; cursor: pointer; font-size: 1.10rem;"
               @onclick="OnClickDisconnect">
         </span>
     </p>
+
+    <button class="btn btn-danger mobile-only stretch-when-narrower-than-1280px"
+            style="margin-top: -4px; margin-bottom: 8px;"
+            @onclick="OnClickDisconnect"
+            type="button">
+        <span class="oi oi-account-logout"></span>
+        &nbsp;Disconnect
+    </button>
 
     <p>
         Current directory:
@@ -201,6 +209,9 @@ else
                             <button class="btn btn-danger mt-3 stretch-when-narrow"
                                     title="Delete"
                                     @onclick="() => OnClickDelete(file)"
+                                    data-bs-toggle="collapse"
+                                    data-bs-target="#collapse_@fileNameHash"
+                                    aria-controls="collapse_@fileNameHash"
                                     type="button">
                                 <span class="oi oi-trash"></span> <span class="mobile-only">Delete</span>
                             </button>
@@ -497,6 +508,14 @@ else
         }
         else if (file.IsRegularFile)
         {
+            PermissionStatus status = await Permissions.RequestAsync<Permissions.StorageWrite>();
+
+            if (status != PermissionStatus.Granted)
+            {
+                await Application.Current.MainPage.DisplayAlert("Insufficient permissions", $"This app requires permission to access your storage in order to download files.", "OK");
+                return;
+            }
+
             string downloadFolder = await SecureStorage.GetAsync(Constants.PreferenceIds.LAST_DOWNLOAD_DIRECTORY);
 
             if (downloadFolder is null || !Directory.Exists(downloadFolder))
@@ -666,11 +685,18 @@ else
 
     private async Task OnClickUpload()
     {
+        PermissionStatus status = await Permissions.RequestAsync<Permissions.StorageRead>();
+
+        if (status != PermissionStatus.Granted)
+        {
+            await Application.Current.MainPage.DisplayAlert("Insufficient permissions", "This app requires permission to access your storage in order to download files.", "OK");
+            return;
+        }
+
         if (UploadLock.IsLocked)
         {
             return;
         }
-
 
         UploadLock.Lock();
 
