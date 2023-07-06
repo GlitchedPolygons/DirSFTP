@@ -80,7 +80,7 @@
         <button class="btn btn-primary"
                 type="button"
                 id="go-btn"
-            disabled="@UploadLock.IsLocked"
+                disabled="@UploadLock.IsLocked"
                 @onclick="() => OpenDirectory(currentDirectory)">
             Go
         </button>
@@ -587,15 +587,18 @@ else
 
                             downloadProgress.Remove(file.Name);
 
-                            await InvokeAsync(StateHasChanged);
+                            await InvokeAsync(async () =>
+                            {
+                                StateHasChanged();
 
-                            const double toastFontSize = 14;
-                            const string toastText = "Download finished";
-                            const ToastDuration toastDuration = ToastDuration.Short;
+                                const double toastFontSize = 14;
+                                const string toastText = "Download finished";
+                                const ToastDuration toastDuration = ToastDuration.Short;
 
-                            await Toast
-                               .Make(toastText, toastDuration, toastFontSize)
-                               .Show(default);
+                                await Toast
+                                    .Make(toastText, toastDuration, toastFontSize)
+                                    .Show(default);
+                            });
                         });
                     }
                 });
