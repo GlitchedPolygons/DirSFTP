@@ -137,6 +137,3 @@ StyleCopReport.xml
 
 **/.vs/
 **/.idea/
-
-DirSFTP/Platforms/Windows/Package.appxmanifest
-*.appxmanifest

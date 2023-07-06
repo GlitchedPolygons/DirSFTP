@@ -37,7 +37,7 @@
       <ApplicationId>com.glitchedpolygons.dirsftp</ApplicationId>
       <PackageProjectUrl>https://github.com/GlitchedPolygons/DirSFTP</PackageProjectUrl>
       <GenerateAppInstallerFile>False</GenerateAppInstallerFile>
-      <AppxPackageSigningEnabled>True</AppxPackageSigningEnabled>
+      <AppxPackageSigningEnabled>False</AppxPackageSigningEnabled>
       <PackageCertificateThumbprint>B0D7C81231B45C844538CF2152338FB97E187C70</PackageCertificateThumbprint>
       <AppxPackageSigningTimestampServerUrl>http://timestamp.digicert.com</AppxPackageSigningTimestampServerUrl>
       <AppxPackageSigningTimestampDigestAlgorithm>SHA512</AppxPackageSigningTimestampDigestAlgorithm>
