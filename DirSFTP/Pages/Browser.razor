@@ -59,7 +59,7 @@
     </p>
 
     <button class="btn btn-danger mobile-only stretch-when-narrow"
-            style="margin-top: -4px; margin-bottom: 8px;"
+            style="margin-top: -4px; margin-bottom: 12px;"
             @onclick="OnClickDisconnect"
             type="button">
         <span class="oi oi-account-logout"></span>
@@ -71,7 +71,7 @@
     </p>
 
     <div class="input-group"
-         style="max-width: 666px;">
+         style="max-width: 666px; margin-top: -4px;">
 
         <input type="text"
                class="form-control"
@@ -413,6 +413,7 @@ else
 
 @code
 {
+    private volatile int lastRefreshUI;
     private string currentDirectory = ".";
     private SftpConfig currentSftpConfig = null;
     private ISftpService sftpService = null;
@@ -587,6 +588,14 @@ else
                             downloadProgress.Remove(file.Name);
 
                             await InvokeAsync(StateHasChanged);
+
+                            const double toastFontSize = 14;
+                            const string toastText = "Download finished";
+                            const ToastDuration toastDuration = ToastDuration.Short;
+
+                            await Toast
+                               .Make(toastText, toastDuration, toastFontSize)
+                               .Show(default);
                         });
                     }
                 });
@@ -597,7 +606,8 @@ else
             }
         }
         else
-        {            // TODO
+        {
+            await Application.Current.MainPage.DisplayAlert("Access failed", $"Failed to access entry \"{file.Name}\" - unknown entry type!", "OK");
         }
     }
 
@@ -765,20 +775,18 @@ else
                 uploadProgressTuple.Item1 = progress;
 
                 uploadProgress[file.FileName] = uploadProgressTuple;
+
+                int utcNow = (int)DateTime.UtcNow.ToUnixTimeMilliseconds();
+
+                if (utcNow - lastRefreshUI > 256)
+                {
+                    lastRefreshUI = utcNow;
+                    InvokeAsync(StateHasChanged);
+                }
             });
 
             uploadTasks.Add(uploadTask);
         }
-
-        _ = Task.Run(async () =>
-        {
-            while (uploadTasks.NotNullNotEmpty() && uploadTasks.Any(task => !task.IsCompleted))
-            {
-                await InvokeAsync(StateHasChanged);
-
-                await Task.Delay(256);
-            }
-        });
 
         await Task.WhenAll(uploadTasks);
 
