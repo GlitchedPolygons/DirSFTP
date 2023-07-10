@@ -451,7 +451,7 @@ else
             {
                 currentSftpConfig.Password = password;
             }
-        }
+        }       
 
         if (currentDirectory.NullOrEmpty())
         {
@@ -758,6 +758,8 @@ else
 
         IList<Task> uploadTasks = new List<Task>();
 
+        await InvokeAsync(StateHasChanged);
+
         foreach (FileResult file in files)
         {
             if (Directory.Exists(file.FullPath)) // Uploading entire directories is not yet supported.
@@ -765,11 +767,14 @@ else
                 continue;
             }
 
-            await using Stream fileStream = await file.OpenReadAsync();
+            using (Stream fileStream = await file.OpenReadAsync())
+            {
+                ulong fileSizeBytes = (ulong)fileStream.Length; // Type-casts from hell, uh oh ;D
 
-            ulong fileSizeBytes = (ulong)fileStream.Length; // Type-casts from hell, uh oh ;D
+                uploadProgress[file.FileName] = (0, fileSizeBytes);
+            }
 
-            uploadProgress[file.FileName] = (0, fileSizeBytes);
+            await InvokeAsync(StateHasChanged);
 
             Task uploadTask = sftpService.UploadFileAsync(file.FullPath, $"{currentDirectory.TrimEnd('/').TrimEnd('\\')}/{file.FileName}", true, (ulong progress) =>
             {
@@ -790,6 +795,8 @@ else
 
             uploadTasks.Add(uploadTask);
         }
+
+        await InvokeAsync(StateHasChanged);
 
         await Task.WhenAll(uploadTasks);
 
